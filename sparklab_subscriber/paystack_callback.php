@@ -22,34 +22,76 @@ if ($paymentData['status'] === true) {
     $email = $paymentData['data']['metadata']['email'];
 
     // Retrieve the subscriber ID based on the email
-    $subscriberQuery = "SELECT id FROM subscribers WHERE email = '$email'";
+    $subscriberQuery = "SELECT registration_id FROM subscribers WHERE email = '$email'";
     $subscriberResult = $conn->query($subscriberQuery);
 
-    if ($subscriberResult->num_rows > 0) {
-        $subscriberRow = $subscriberResult->fetch_assoc();
-        $subscriberId = $subscriberRow['id'];
+    if ($subscriberResult) {
+        // Check if subscriber exists
+        if ($subscriberResult->num_rows > 0) {
+            $subscriberRow = $subscriberResult->fetch_assoc();
+            $subscriberId = $subscriberRow['registration_id'];
 
-        // Extract other payment details
-        $name = $paymentData['data']['metadata']['full_name'];
-        $amount = $paymentData['data']['amount'] / 100; // Convert amount from kobo to naira
-        $paymentReference = $paymentData['data']['reference'];
-        $status = $paymentData['data']['status'];
-        $date = date('Y-m-d H:i:s', strtotime($paymentData['data']['transaction_date']));
+            // Extract other payment details
+            $name = $paymentData['data']['metadata']['full_name'];
+            $email = $paymentData['data']['metadata']['email'];
+            $amount = $paymentData['data']['amount'] / 100; // Convert amount from kobo to naira
+            $paymentReference = $paymentData['data']['reference'];
+            $status = $paymentData['data']['status'];
+            $date = date('Y-m-d H:i:s', strtotime($paymentData['data']['transaction_date']));
 
-        // Insert the payment details into the subscription table
-        $sql = "INSERT INTO subscription (subscriber_id, name, email, amount, payment_reference, status, date) 
-                VALUES ('$subscriberId', '$name', '$email', '$amount', '$paymentReference', '$status', '$date')";
+            // Manually set subscription duration based on the selected amount
+            $subscriptionDuration = 'Default'; // Set your default duration
 
-        if ($conn->query($sql) === TRUE) {
-            // Payment details successfully inserted into the database
-            echo "Payment successful. Transaction Reference: " . $paymentReference;
+            // Determine subscription duration based on the amount
+            switch ($amount) {
+                case 500:
+                    $subscriptionDuration = 'Daily';
+                    break;
+                case 1000:
+                    $subscriptionDuration = 'Weekly';
+                    break;
+                case 2000:
+                    $subscriptionDuration = 'Monthly';
+                    break;
+                // Add more cases as needed
+                default:
+                    // Handle other cases or set a default duration
+            }
+
+            // Set expiration date based on subscription duration
+            switch ($subscriptionDuration) {
+                case 'Daily':
+                    $expirationDate = date('Y-m-d H:i:s', strtotime('+1 day', strtotime($date)));
+                    break;
+                case 'Weekly':
+                    $expirationDate = date('Y-m-d H:i:s', strtotime('+1 week', strtotime($date)));
+                    break;
+                case 'Monthly':
+                    $expirationDate = date('Y-m-d H:i:s', strtotime('+1 month', strtotime($date)));
+                    break;
+                // Add more cases as needed
+                default:
+                    // Handle other cases or set a default expiration date
+            }
+
+            // Insert the payment details into the subscription table
+            $sql = "INSERT INTO subscription (subscriber_id, name, email, amount, payment_reference, status, date, subscription_duration, expiration_date) 
+                    VALUES ('$subscriberId', '$name', '$email', '$amount', '$paymentReference', '$status', '$date', '$subscriptionDuration', '$expirationDate')";
+
+            if ($conn->query($sql) === TRUE) {
+                // Payment details successfully inserted into the database
+                echo "Payment successful. Transaction Reference: " . $paymentReference;
+            } else {
+                // Error inserting payment details into the database
+                echo "Error: " . $sql . "<br>" . $conn->error;
+            }
         } else {
-            // Error inserting payment details into the database
-            echo "Error: " . $sql . "<br>" . $conn->error;
+            // Subscriber not found
+            echo "Error: Subscriber not found for email $email";
         }
     } else {
-        // Subscriber not found
-        echo "Error: Subscriber not found for email $email";
+        // Query execution error
+        echo "Error executing query: " . $conn->error;
     }
 } else {
     // Payment verification failed

@@ -4,27 +4,53 @@ include '../config/config.php';
 
 // Start the session
 session_start();
+
 // Check if the user is not logged in
-
-// Check if the user is logged in
-if (isset($_SESSION['email'])) {
-    // Retrieve user data from the database
-    $email = $_SESSION['email'];
-    $sql = "SELECT * FROM subscribers WHERE email = '$email'";
-    $result = $conn->query($sql);
-
-    if ($result && $result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $fullName = $row['full_name'];
-        $profilePhoto = $row['profile_photo'];
-
-        // Close the database connection
-        $conn->close();
-        
-    }
-   
+if (!isset($_SESSION['email'])) {
+    // Redirect the user to the login page
+    header("Location: login.php");
+    exit(); // Stop further execution
 }
+
+// Retrieve user data from the database
+$email = $_SESSION['email'];
+$sql = "SELECT * FROM subscribers WHERE email = '$email'";
+$result = $conn->query($sql);
+
+if ($result && $result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $fullName = $row['full_name'];
+    $profilePhoto = $row['profile_photo'];
+
+    // Fetch all subscriptions associated with the user
+    $subscriberId = $row['registration_id'];
+    $subscriptionSql = "SELECT * FROM subscription WHERE subscriber_id = '$subscriberId' ORDER BY expiration_date DESC";
+    $subscriptionResult = $conn->query($subscriptionSql);
+
+    // Check if there are subscriptions
+    if ($subscriptionResult && $subscriptionResult->num_rows > 0) {
+        // Fetch and display each subscription
+        while ($subscriptionRow = $subscriptionResult->fetch_assoc()) {
+            $subscriptionDuration = $subscriptionRow['subscription_duration'];
+            $expirationDate = $subscriptionRow['expiration_date'];
+            $paymentReference = $subscriptionRow['payment_reference'];
+            $amount = $subscriptionRow['amount'];
+            // Display the subscription details here as needed
+        }
+    } else {
+        // No subscriptions found
+        echo "No subscriptions found for this user.";
+    }
+} else {
+    // User not found
+    echo "User not found.";
+}
+
+// Close the database connection
+$conn->close();
 ?>
+
+
 
 <!DOCTYPE html>
 
@@ -150,49 +176,7 @@ if (isset($_SESSION['email'])) {
                   <div data-i18n="Dashboards">Dashboards</div>
                   <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
                 </a>
-                <!-- <ul class="menu-sub">
-                  <li class="menu-item">
-                    <a
-                      href="https://demos.themeselection.com/Spark Lab-bootstrap-html-admin-template/html/vertical-menu-template/dashboards-crm.html"
-                      target="_blank"
-                      class="menu-link">
-                      <div data-i18n="CRM">CRM</div>
-                      <div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
-                    </a>
-                  </li>
-                  <li class="menu-item active">
-                    <a href="dashboard.php" class="menu-link">
-                      <div data-i18n="Analytics">Analytics</div>
-                    </a>
-                  </li>
-                  <li class="menu-item">
-                    <a
-                      href="https://demos.themeselection.com/Spark Lab-bootstrap-html-admin-template/html/vertical-menu-template/app-ecommerce-dashboard.html"
-                      target="_blank"
-                      class="menu-link">
-                      <div data-i18n="eCommerce">eCommerce</div>
-                      <div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
-                    </a>
-                  </li>
-                  <li class="menu-item">
-                    <a
-                      href="https://demos.themeselection.com/Spark Lab-bootstrap-html-admin-template/html/vertical-menu-template/app-logistics-dashboard.html"
-                      target="_blank"
-                      class="menu-link">
-                      <div data-i18n="Logistics">Logistics</div>
-                      <div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
-                    </a>
-                  </li>
-                  <li class="menu-item">
-                    <a
-                      href="https://demos.themeselection.com/Spark Lab-bootstrap-html-admin-template/html/vertical-menu-template/app-academy-dashboard.html"
-                      target="_blank"
-                      class="menu-link">
-                      <div data-i18n="Academy">Academy</div>
-                      <div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
-                    </a>
-                  </li>
-                </ul> -->
+
               </li>
 
               <li class="menu-header small text-uppercase"><span class="menu-header-text">Subscription</span></li>
@@ -375,7 +359,8 @@ if (isset($_SESSION['email'])) {
                       <div class="d-flex align-items-end row">
                         <div class="col-sm-7">
                           <div class="card-body">
-                            <h5 class="card-title text-primary">Congratulations <?php echo $fullName; ?> 🎉</h5>
+                            
+                          <h5 class="card-title text-primary">Congratulations <?php echo $fullName; ?> 🎉</h5>
                             <p class="mb-4">
                               Welcome back to your personalized dashboard! We're excited to have you return and continue your journey with <span class="fw-medium">Spark Lab</span>.
                             </p>
@@ -397,8 +382,33 @@ if (isset($_SESSION['email'])) {
                     </div>
                   </div>
 
-                  <!-- <div class="col-lg-4 col-md-4 order-1">
-                    <div class="row">
+                  <!-- countdown -->
+                  <div class="col-lg-6 col-md-12 col-6 mb-4">
+                      <div class="card">
+                          <div class="card-body" data-expiration="<?php echo $expirationDate; ?>">
+                              <div class="card-title d-flex align-items-start justify-content-between">
+                                  <div class="avatar flex-shrink-0">
+                                      <img src="assets/img/icons/unicons/usd-circle.svg" alt="chart success" class="rounded" />
+                                  </div>
+                                  <div class="dropdown">
+                                      <button class="btn p-0" type="button" id="cardOpt3" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                          <i class="bx bx-dots-vertical-rounded"></i>
+                                      </button>
+                                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
+                                          <a class="dropdown-item" href="javascript:void(0);">View More</a>
+                                          <a class="dropdown-item" href="javascript:void(0);">Delete</a>
+                                      </div>
+                                  </div>
+                              </div>
+                              <span class="fw-medium d-block mb-1">Subscription Status</span>
+                              <h3 class="card-title mb-2"><?php echo $expirationDate; ?></h3>
+                              <small class="text-success fw-medium" id="expirationCountdown"></small>
+                          </div>
+                      </div>
+                  </div>
+
+                      <!-- History -->
+
                       <div class="col-lg-6 col-md-12 col-6 mb-4">
                         <div class="card">
                           <div class="card-body">
@@ -415,7 +425,7 @@ if (isset($_SESSION['email'])) {
                                   type="button"
                                   id="cardOpt3"
                                   data-bs-toggle="dropdown"
-                                  aria-haspopup="true"
+                                  aria-haspopup="true"<
                                   aria-expanded="false">
                                   <i class="bx bx-dots-vertical-rounded"></i>
                                 </button>
@@ -431,346 +441,57 @@ if (isset($_SESSION['email'])) {
                           </div>
                         </div>
                       </div>
-                      <div class="col-lg-6 col-md-12 col-6 mb-4">
-                        <div class="card">
-                          <div class="card-body">
-                            <div class="card-title d-flex align-items-start justify-content-between">
-                              <div class="avatar flex-shrink-0">
-                                <img
-                                  src="assets/img/icons/unicons/wallet-info.png"
-                                  alt="Credit Card"
-                                  class="rounded" />
-                              </div>
-                              <div class="dropdown">
-                                <button
-                                  class="btn p-0"
-                                  type="button"
-                                  id="cardOpt6"
-                                  data-bs-toggle="dropdown"
-                                  aria-haspopup="true"
-                                  aria-expanded="false">
-                                  <i class="bx bx-dots-vertical-rounded"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
-                                  <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                  <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                </div>
-                              </div>
-                            </div>
-                            <span>Sales</span>
-                            <h3 class="card-title text-nowrap mb-1">$4,679</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +28.42%</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div> -->
-                  <!-- Total Revenue -->
 
-                  <!-- <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
-                    <div class="card">
-                      <div class="row row-bordered g-0">
-                        <div class="col-md-8">
-                          <h5 class="card-header m-0 me-2 pb-3">Total Revenue</h5>
-                          <div id="totalRevenueChart" class="px-2"></div>
-                        </div>
-                        <div class="col-md-4">
-                          <div class="card-body">
-                            <div class="text-center">
-                              <div class="dropdown">
-                                <button
-                                  class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                  type="button"
-                                  id="growthReportId"
-                                  data-bs-toggle="dropdown"
-                                  aria-haspopup="true"
-                                  aria-expanded="false">
-                                  2022
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="growthReportId">
-                                  <a class="dropdown-item" href="javascript:void(0);">2021</a>
-                                  <a class="dropdown-item" href="javascript:void(0);">2020</a>
-                                  <a class="dropdown-item" href="javascript:void(0);">2019</a>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div id="growthChart"></div>
-                          <div class="text-center fw-medium pt-3 mb-2">62% Company Growth</div>
-  
-                          <div class="d-flex px-xxl-4 px-lg-2 p-4 gap-xxl-3 gap-lg-1 gap-3 justify-content-between">
-                            <div class="d-flex">
-                              <div class="me-2">
-                                <span class="badge bg-label-primary p-2"><i class="bx bx-dollar text-primary"></i></span>
-                              </div>
-                              <div class="d-flex flex-column">
-                                <small>2022</small>
-                                <h6 class="mb-0">$32.5k</h6>
-                              </div>
-                            </div>
-                            <div class="d-flex">
-                              <div class="me-2">
-                                <span class="badge bg-label-info p-2"><i class="bx bx-wallet text-info"></i></span>
-                              </div>
-                              <div class="d-flex flex-column">
-                                <small>2021</small>
-                                <h6 class="mb-0">$41.2k</h6>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div> -->
-
-                  <!--/ Total Revenue -->
-                  <!-- <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
-                    <div class="row">
-                      <div class="col-6 mb-4">
-                        <div class="card">
-                          <div class="card-body">
-                            <div class="card-title d-flex align-items-start justify-content-between">
-                              <div class="avatar flex-shrink-0">
-                                <img src="assets/img/icons/unicons/paypal.png" alt="Credit Card" class="rounded" />
-                              </div>
-                              <div class="dropdown">
-                                <button
-                                  class="btn p-0"
-                                  type="button"
-                                  id="cardOpt4"
-                                  data-bs-toggle="dropdown"
-                                  aria-haspopup="true"
-                                  aria-expanded="false">
-                                  <i class="bx bx-dots-vertical-rounded"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
-                                  <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                  <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                </div>
-                              </div>
-                            </div>
-                            <span class="d-block mb-1">Payments</span>
-                            <h3 class="card-title text-nowrap mb-2">$2,456</h3>
-                            <small class="text-danger fw-medium"><i class="bx bx-down-arrow-alt"></i> -14.82%</small>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-6 mb-4">
-                        <div class="card">
-                          <div class="card-body">
-                            <div class="card-title d-flex align-items-start justify-content-between">
-                              <div class="avatar flex-shrink-0">
-                                <img src="assets/img/icons/unicons/cc-primary.png" alt="Credit Card" class="rounded" />
-                              </div>
-                              <div class="dropdown">
-                                <button
-                                  class="btn p-0"
-                                  type="button"
-                                  id="cardOpt1"
-                                  data-bs-toggle="dropdown"
-                                  aria-haspopup="true"
-                                  aria-expanded="false">
-                                  <i class="bx bx-dots-vertical-rounded"></i>
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="cardOpt1">
-                                  <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                  <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                </div>
-                              </div>
-                            </div>
-                            <span class="fw-medium d-block mb-1">Transactions</span>
-                            <h3 class="card-title mb-2">$14,857</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +28.14%</small>
-                          </div>
-                        </div>
-                      </div>
-                      <!-- </div>
-      <div class="row"> -->
-                      <!-- <div class="col-12 mb-4">
-                        <div class="card">
-                          <div class="card-body">
-                            <div class="d-flex justify-content-between flex-sm-row flex-column gap-3">
-                              <div class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
-                                <div class="card-title">
-                                  <h5 class="text-nowrap mb-2">Profile Report</h5>
-                                  <span class="badge bg-label-warning rounded-pill">Year 2021</span>
-                                </div>
-                                <div class="mt-sm-auto">
-                                  <small class="text-success text-nowrap fw-medium"
-                                    ><i class="bx bx-chevron-up"></i> 68.2%</small
-                                  >
-                                  <h3 class="mb-0">$84,686k</h3>
-                                </div>
-                              </div>
-                              <div id="profileReportChart"></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div> --> 
 
                 </div>
                 <div class="row">
                   <!-- Order Statistics -->
                   <div class="col-md-6 col-lg-4 col-xl-4 order-0 mb-4">
                     <div class="card h-100">
-                      <div class="card-header d-flex align-items-center justify-content-between pb-0">
-                        <div class="card-title mb-0">
-                          <h5 class="m-0 me-2">Order Statistics</h5>
-                          <small class="text-muted">42.82k Total Sales</small>
-                        </div>
-                        <div class="dropdown">
-                          <button
-                            class="btn p-0"
-                            type="button"
-                            id="orederStatistics"
-                            data-bs-toggle="dropdown"
-                            aria-haspopup="true"
-                            aria-expanded="false">
-                            <i class="bx bx-dots-vertical-rounded"></i>
-                          </button>
-                          <div class="dropdown-menu dropdown-menu-end" aria-labelledby="orederStatistics">
-                            <a class="dropdown-item" href="javascript:void(0);">Select All</a>
-                            <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
-                            <a class="dropdown-item" href="javascript:void(0);">Share</a>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                          <div class="d-flex flex-column align-items-center gap-1">
-                            <h2 class="mb-2">8,258</h2>
-                            <span>Total Orders</span>
-                          </div>
-                          <div id="orderStatisticsChart"></div>
-                        </div>
-                        <ul class="p-0 m-0">
-                          <li class="d-flex mb-4 pb-1">
-                            <div class="avatar flex-shrink-0 me-3">
-                              <span class="avatar-initial rounded bg-label-primary"
-                                ><i class="bx bx-mobile-alt"></i
-                              ></span>
+                        <div class="card-header d-flex align-items-center justify-content-between pb-0">
+                            <div class="card-title mb-0">
+                                <h5 class="m-0 me-2">Subscrptions</h5>
+                                <small class="text-muted">42.82k Total Sales</small>
                             </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <h6 class="mb-0">Electronic</h6>
-                                <small class="text-muted">Mobile, Earbuds, TV</small>
-                              </div>
-                              <div class="user-progress">
-                                <small class="fw-medium">82.5k</small>
-                              </div>
-                            </div>
-                          </li>
-                          <li class="d-flex mb-4 pb-1">
-                            <div class="avatar flex-shrink-0 me-3">
-                              <span class="avatar-initial rounded bg-label-success"><i class="bx bx-closet"></i></span>
-                            </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <h6 class="mb-0">Fashion</h6>
-                                <small class="text-muted">T-shirt, Jeans, Shoes</small>
-                              </div>
-                              <div class="user-progress">
-                                <small class="fw-medium">23.8k</small>
-                              </div>
-                            </div>
-                          </li>
-                          <li class="d-flex mb-4 pb-1">
-                            <div class="avatar flex-shrink-0 me-3">
-                              <span class="avatar-initial rounded bg-label-info"><i class="bx bx-home-alt"></i></span>
-                            </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <h6 class="mb-0">Decor</h6>
-                                <small class="text-muted">Fine Art, Dining</small>
-                              </div>
-                              <div class="user-progress">
-                                <small class="fw-medium">849k</small>
-                              </div>
-                            </div>
-                          </li>
-                          <li class="d-flex">
-                            <div class="avatar flex-shrink-0 me-3">
-                              <span class="avatar-initial rounded bg-label-secondary"
-                                ><i class="bx bx-football"></i
-                              ></span>
-                            </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <h6 class="mb-0">Sports</h6>
-                                <small class="text-muted">Football, Cricket Kit</small>
-                              </div>
-                              <div class="user-progress">
-                                <small class="fw-medium">99</small>
-                              </div>
-                            </div>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                  <!--/ Order Statistics -->
-  
-                  <!-- Expense Overview -->
-                  <!-- <div class="col-md-6 col-lg-4 order-1 mb-4">
-                    <div class="card h-100">
-                      <div class="card-header">
-                        <ul class="nav nav-pills" role="tablist">
-                          <li class="nav-item">
-                            <button
-                              type="button"
-                              class="nav-link active"
-                              role="tab"
-                              data-bs-toggle="tab"
-                              data-bs-target="#navs-tabs-line-card-income"
-                              aria-controls="navs-tabs-line-card-income"
-                              aria-selected="true">
-                              Income
-                            </button>
-                          </li>
-                          <li class="nav-item">
-                            <button type="button" class="nav-link" role="tab">Expenses</button>
-                          </li>
-                          <li class="nav-item">
-                            <button type="button" class="nav-link" role="tab">Profit</button>
-                          </li>
-                        </ul>
-                      </div>
-                      <div class="card-body px-0">
-                        <div class="tab-content p-0">
-                          <div class="tab-pane fade show active" id="navs-tabs-line-card-income" role="tabpanel">
-                            <div class="d-flex p-4 pt-3">
-                              <div class="avatar flex-shrink-0 me-3">
-                                <img src="assets/img/icons/unicons/wallet.png" alt="User" />
-                              </div>
-                              <div>
-                                <small class="text-muted d-block">Total Balance</small>
-                                <div class="d-flex align-items-center">
-                                  <h6 class="mb-0 me-1">$459.10</h6>
-                                  <small class="text-success fw-medium">
-                                    <i class="bx bx-chevron-up"></i>
-                                    42.9%
-                                  </small>
+                            <div class="dropdown">
+                                <button class="btn p-0" type="button" id="orederStatistics" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="orederStatistics">
+                                    <a class="dropdown-item" href="javascript:void(0);">Select All</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Share</a>
                                 </div>
-                              </div>
                             </div>
-                            <div id="incomeChart"></div>
-                            <div class="d-flex justify-content-center pt-4 gap-2">
-                              <div class="flex-shrink-0">
-                                <div id="expensesOfWeek"></div>
-                              </div>
-                              <div>
-                                <p class="mb-n1 mt-1">Expenses This Week</p>
-                                <small class="text-muted">$39 less than last week</small>
-                              </div>
-                            </div>
-                          </div>
                         </div>
-                      </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                
+                            </div>
+                            <ul class="p-0 m-0">
+                                <li class="d-flex mb-4 pb-1">
+                                    <div class="avatar flex-shrink-0 me-3">
+                                        <span class="avatar-initial rounded bg-label-primary">
+                                            <i class="bx bx-dollar-circle"></i>
+                                        </span>
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0"><?php echo $subscriptionDuration; ?></h6>
+                                            <small class="text-muted"><?php echo $expirationDate; ?></small>
+                                        </div>
+                                        <div class="user-progress">
+                                            <small class="fw-medium">Approved</small>
+                                        </div>
+                                    </div>
+                                </li>
+                                <!-- Other list items -->
+                            </ul>
+                        </div>
                     </div>
-                  </div> -->
-                  <!--/ Expense Overview -->
+                </div>
+
+   
   
                   <!-- Transactions -->
                   <div class="col-md-6 col-lg-8 order-2 mb-4">
@@ -798,92 +519,17 @@ if (isset($_SESSION['email'])) {
                         <ul class="p-0 m-0">
                           <li class="d-flex mb-4 pb-1">
                             <div class="avatar flex-shrink-0 me-3">
-                              <img src="assets/img/icons/unicons/paypal.png" alt="User" class="rounded" />
-                            </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <small class="text-muted d-block mb-1">Paypal</small>
-                                <h6 class="mb-0">Send money</h6>
-                              </div>
-                              <div class="user-progress d-flex align-items-center gap-1">
-                                <h6 class="mb-0">+82.6</h6>
-                                <span class="text-muted">USD</span>
-                              </div>
-                            </div>
-                          </li>
-                          <li class="d-flex mb-4 pb-1">
-                            <div class="avatar flex-shrink-0 me-3">
                               <img src="assets/img/icons/unicons/wallet.png" alt="User" class="rounded" />
                             </div>
                             <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <small class="text-muted d-block mb-1">Wallet</small>
-                                <h6 class="mb-0">Mac'D</h6>
-                              </div>
-                              <div class="user-progress d-flex align-items-center gap-1">
-                                <h6 class="mb-0">+270.69</h6>
-                                <span class="text-muted">USD</span>
-                              </div>
+                            <div class="me-2">
+                                <small class="text-muted d-block mb-1">Payment Reference</small>
+                                <h6 class="mb-0"><?php echo $paymentReference; ?></h6>
                             </div>
-                          </li>
-                          <li class="d-flex mb-4 pb-1">
-                            <div class="avatar flex-shrink-0 me-3">
-                              <img src="assets/img/icons/unicons/chart.png" alt="User" class="rounded" />
+                            <div class="user-progress d-flex align-items-center gap-1">
+                                <h6 class="mb-0"><?php echo $amount; ?></h6>
+                                <span class="text-muted">NGN</span>
                             </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <small class="text-muted d-block mb-1">Transfer</small>
-                                <h6 class="mb-0">Refund</h6>
-                              </div>
-                              <div class="user-progress d-flex align-items-center gap-1">
-                                <h6 class="mb-0">+637.91</h6>
-                                <span class="text-muted">USD</span>
-                              </div>
-                            </div>
-                          </li>
-                          <li class="d-flex mb-4 pb-1">
-                            <div class="avatar flex-shrink-0 me-3">
-                              <img src="assets/img/icons/unicons/cc-success.png" alt="User" class="rounded" />
-                            </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <small class="text-muted d-block mb-1">Credit Card</small>
-                                <h6 class="mb-0">Ordered Food</h6>
-                              </div>
-                              <div class="user-progress d-flex align-items-center gap-1">
-                                <h6 class="mb-0">-838.71</h6>
-                                <span class="text-muted">USD</span>
-                              </div>
-                            </div>
-                          </li>
-                          <li class="d-flex mb-4 pb-1">
-                            <div class="avatar flex-shrink-0 me-3">
-                              <img src="assets/img/icons/unicons/wallet.png" alt="User" class="rounded" />
-                            </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <small class="text-muted d-block mb-1">Wallet</small>
-                                <h6 class="mb-0">Starbucks</h6>
-                              </div>
-                              <div class="user-progress d-flex align-items-center gap-1">
-                                <h6 class="mb-0">+203.33</h6>
-                                <span class="text-muted">USD</span>
-                              </div>
-                            </div>
-                          </li>
-                          <li class="d-flex">
-                            <div class="avatar flex-shrink-0 me-3">
-                              <img src="assets/img/icons/unicons/cc-warning.png" alt="User" class="rounded" />
-                            </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <small class="text-muted d-block mb-1">Mastercard</small>
-                                <h6 class="mb-0">Ordered Food</h6>
-                              </div>
-                              <div class="user-progress d-flex align-items-center gap-1">
-                                <h6 class="mb-0">-92.45</h6>
-                                <span class="text-muted">USD</span>
-                              </div>
                             </div>
                           </li>
                         </ul>
@@ -954,5 +600,39 @@ if (isset($_SESSION['email'])) {
 
     <!-- Place this tag in your head or just before your close body tag. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script>
+    // Function to calculate remaining days until expiration
+    function calculateRemainingDays(expirationDate) {
+        // Convert expiration date to milliseconds since Unix epoch
+        var expirationTimestamp = new Date(expirationDate).getTime();
+        var currentDate = new Date().getTime();
+
+        // Calculate remaining milliseconds
+        var remainingMilliseconds = expirationTimestamp - currentDate;
+
+        // Calculate remaining days
+        var remainingDays = Math.floor(remainingMilliseconds / (1000 * 60 * 60 * 24));
+
+        return remainingDays;
+    }
+
+    // Function to update the expiration countdown
+    function updateExpirationCountdown() {
+        var expirationDate = '<?php echo $expirationDate; ?>';
+        var remainingDays = calculateRemainingDays(expirationDate);
+
+        // Update the expiration countdown element
+        var expirationCountdownElement = document.getElementById('expirationCountdown');
+        if (remainingDays > 0) {
+            expirationCountdownElement.textContent = remainingDays + ' days left';
+        } else {
+            expirationCountdownElement.textContent = 'Subscription expired';
+        }
+    }
+
+    // Update the expiration countdown when the page loads
+    updateExpirationCountdown();
+</script>
+
   </body>
 </html>

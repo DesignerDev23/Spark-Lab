@@ -16,7 +16,7 @@ if (!isset($_SESSION['email'])) {
 $email = $_SESSION['email'];
 
 // Retrieve subscriber ID using the email
-$subscriberIdQuery = "SELECT id FROM subscribers WHERE email = ?";
+$subscriberIdQuery = "SELECT registration_id FROM subscribers WHERE email = ?";
 $stmt = $conn->prepare($subscriberIdQuery);
 $stmt->bind_param("s", $email);
 $stmt->execute();
@@ -24,7 +24,7 @@ $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
-    $subscriberId = $row['id'];
+    $subscriberId = $row['registration_id'];
 
     // Fetch transactions using subscriber ID
     $transactionQuery = "SELECT id, amount, payment_reference, status FROM subscription WHERE subscriber_id = ?";

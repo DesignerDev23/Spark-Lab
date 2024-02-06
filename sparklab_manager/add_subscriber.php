@@ -23,38 +23,56 @@ if (isset($_SESSION['username'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Retrieve form data
-    $fullName = $_POST['full_name'] ?? '';
-    $areaOfInterest = $_POST['area_of_interest'] ?? '';
-    $email = $_POST['basic-default-email'] ?? ''; // Update the input ID
-    $phoneNo = $_POST['basic-default-phone'] ?? '';
-    $contactAddress = $_POST['basic-default-contact-address'] ?? '';
-    $meansOfIdentity = $_FILES['means_of_identity']['name'] ?? '';
-    $profilePhoto = $_FILES['profile_photo']['name'] ?? '';
-    $password = $_POST['password'] ?? '';
+  // Retrieve form data
+  $fullName = $_POST['full_name'] ?? '';
+  $areaOfInterest = $_POST['area_of_interest'] ?? '';
+  $email = $_POST['basic-default-email'] ?? '';
+  $phoneNo = $_POST['basic-default-phone'] ?? '';
+  $contactAddress = $_POST['basic-default-contact-address'] ?? '';
+  $meansOfIdentity = $_FILES['means_of_identity']['name'] ?? '';
+  $profilePhoto = $_FILES['profile_photo']['name'] ?? '';
+  $password = $_POST['password'] ?? '';
 
-    // Process file uploads (you may want to add more security checks)
-    $meansOfIdentityDestination = '../uploads/identity/' . uniqid() . '_' . $meansOfIdentity;
-    $profilePhotoDestination = '../uploads/photos/' . uniqid() . '_' . $profilePhoto;
+  // Check if the email already exists in the database
+  $emailCheckQuery = "SELECT id FROM subscribers WHERE email = ?";
+  $stmt = $conn->prepare($emailCheckQuery);
+  $stmt->bind_param("s", $email);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
-    if (move_uploaded_file($_FILES['means_of_identity']['tmp_name'], $meansOfIdentityDestination) &&
-        move_uploaded_file($_FILES['profile_photo']['tmp_name'], $profilePhotoDestination)) {
+  if ($result->num_rows > 0) {
+      // Email already exists, display an error message
+      echo '<script>alert("Error: Email already exists.");</script>';
+      header('Location: signup.php');
+  }
 
-          $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        // Save data to the database
-        $sql = "INSERT INTO subscribers (full_name, area_of_interest, email, phone_no, contact_address, means_of_identity, profile_photo, password) 
-        VALUES ('$fullName', '$areaOfInterest', '$email', '$phoneNo', '$contactAddress', '$meansOfIdentityDestination', '$profilePhotoDestination', '$hashedPassword')";
+  // Process file uploads (you may want to add more security checks)
+  $meansOfIdentityDestination = '../uploads/identity/' . uniqid() . '_' . $meansOfIdentity;
+  $profilePhotoDestination = '../uploads/photos/' . uniqid() . '_' . $profilePhoto;
 
-        if ($conn->query($sql) === TRUE) {
-            // Redirect to a success page or display a success message
-            header('Location: subscibers.php');
-            exit();
-        } else {
-            die('Error: ' . $sql . '<br>' . $conn->error);
-        }
-    } else {
-        die('Failed to upload file(s).');
-    }
+  if (move_uploaded_file($_FILES['means_of_identity']['tmp_name'], $meansOfIdentityDestination) &&
+      move_uploaded_file($_FILES['profile_photo']['tmp_name'], $profilePhotoDestination)) {
+
+      // Generate a registration number with a prefix and a random number
+      $registrationPrefix = 'REG'; // You can customize the prefix
+      $registrationNumber = $registrationPrefix . '-' . rand(1000, 9999);
+
+      $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+      // Save data to the database
+      $sql = "INSERT INTO subscribers (registration_id, full_name, area_of_interest, email, phone_no, contact_address, means_of_identity, profile_photo, password) 
+      VALUES ('$registrationNumber', '$fullName', '$areaOfInterest', '$email', '$phoneNo', '$contactAddress', '$meansOfIdentityDestination', '$profilePhotoDestination', '$hashedPassword')";
+
+      if ($conn->query($sql) === TRUE) {
+          // Redirect to a success page or display a success message
+          header('Location: index.php');
+          exit();
+      } else {
+          die('Error: ' . $sql . '<br>' . $conn->error);
+      }
+  } else {
+      die('Failed to upload file(s).');
+  }
 }
 
 // Make sure to close the database connection if it's open
@@ -438,17 +456,19 @@ $conn->close();
                   <div class="row mb-3">
                       <label class="col-sm-2 col-form-label" for="basic-default-name">Full Name</label>
                       <div class="col-sm-10">
-                          <input type="text" class="form-control" id="basic-default-name" name="full_name" placeholder="John Doe" />
+                          <input type="text" class="form-control" id="basic-default-name" name="full_name" placeholder="John Doe" required/>
                       </div>
                   </div>
                   <div class="row mb-3">
                       <label class="col-sm-2 col-form-label" for="basic-default-company">Area of Interest</label>
                       <div class="col-sm-10">
-                          <select class="form-select" id="exampleFormControlSelect1" name="area_of_interest" aria-label="Default select example">
+                          <select class="form-select" id="exampleFormControlSelect1" name="area_of_interest" aria-label="Default select example" onchange="showTextArea()">
                               <option selected>-- Select an option --</option>
                               <option value="Creativity">Creativity</option>
                               <option value="Innovation">Innovation</option>
+                              <option value="Others">Others</option>
                           </select>
+                          <input class="form-control mt-2" id="otherTextArea" name="area_of_interest" style="display: none;" placeholder="Specify other area of interest">
                       </div>
                   </div>
 
@@ -463,6 +483,7 @@ $conn->close();
                                   class="form-control"
                                   placeholder="john.doe"
                                   aria-label="john.doe"
+                                  required
                                   aria-describedby="basic-default-email2" />
                               <span class="input-group-text" id="basic-default-email2">@example.com</span>
                           </div>
@@ -678,6 +699,16 @@ $conn->close();
                 $('div.head-label').html('<h5 class="card-title mb-0">DataTable with Buttons</h5>');
             }
         });
+        function showTextArea() {
+        var selectBox = document.getElementById("exampleFormControlSelect1");
+        var otherTextArea = document.getElementById("otherTextArea");
+
+        if (selectBox.value === "Others") {
+            otherTextArea.style.display = "block";
+        } else {
+            otherTextArea.style.display = "none";
+        }
+    }
     </script>
   </body>
 </html>

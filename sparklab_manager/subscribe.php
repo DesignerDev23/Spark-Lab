@@ -82,6 +82,9 @@ if (isset($_SESSION['username'])) {
     <link rel="stylesheet" href="assets/css/demo.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
     <!-- Page CSS -->
@@ -457,9 +460,9 @@ if (isset($_SESSION['username'])) {
                       <small class="text-muted float-end">Make a new Subscriber</small>
                     </div>
                     <div class="card-body">
-                      <form id="subscriberForm">
+                      <form id="subscriberForm" method="POST">
                       <div class="row mb-3">
-                      <label class="col-sm-2 col-form-label" for="basic-default-email">Email</label>
+                      <label class="col-sm-2 col-form-label" for="basic-default-email">Subscriber</label>
                         <div class="col-sm-10">
 
                             <select class="form-select" id="fullName" name="fullName" aria-label="Select Full Name">
@@ -476,7 +479,7 @@ if (isset($_SESSION['username'])) {
                           
                 
                         <div class="row mb-3">
-                        <label class="col-sm-2 col-form-label" for="basic-default-name">Subscriber</label>
+                        <label class="col-sm-2 col-form-label" for="basic-default-name">Email</label>
                           <div class="col-sm-10">
                          
                             <input type="text" id="basic-default-email" class="form-control" placeholder="john.doe@example.com">
@@ -488,10 +491,10 @@ if (isset($_SESSION['username'])) {
                           <div class="col-sm-10">
                             <select class="form-select" id="amountSelect" aria-label="Select Amount">
                               <option selected disabled>Select an amount</option>
-                              <option value="50000">Daily -  NGN 500.00</option>
-                              <option value="100000">Weekly -  NGN 1,000.00</option>
-                              <option value="200000">Monthly -  NGN 2,000.00</option>
-                              <option value="200000">Annually -  NGN 2,000.00</option>
+                              <option value="150000">Daily -  NGN 1500.00</option>
+                              <option value="650000">Weekly -  NGN 6,500.00</option>
+                              <option value="2500000">Monthly -  NGN 25,000.00</option>
+                              <!-- <option value="200000">Annually -  NGN 2,000.00</option> -->
                               <!-- Add more options as needed -->
                             </select>
                           </div>
@@ -582,20 +585,36 @@ if (isset($_SESSION['username'])) {
     <script src="assets/vendor/libs/bs-stepper/bs-stepper.js" /></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <script>
-   document.getElementById('paystackBtn').addEventListener('click', function () {
-      var handler = PaystackPop.setup({
-         key: 'pk_test_12658c234f2075a824b3e5862ac5a6b31fc5cd4f', // Replace with your actual Paystack public key
-         email: document.getElementById('basic-default-email').value,
-         amount: document.getElementById('amountSelect').value,
-         currency: 'NGN',
-         ref: 'sub_' + Math.floor((Math.random() * 1000000000) + 1),
-         metadata: {
-        full_name: document.getElementById('fullName').value,
-        email: document.getElementById('basic-default-email').value,
-        amount: document.getElementById('amountSelect').value,
-      },
+document.getElementById('paystackBtn').addEventListener('click', function () {
+    var amountSelect = document.getElementById('amountSelect').value;
+    var duration = '';
 
-         callback: function (response) {
+    switch (amountSelect) {
+        case '150000':
+            duration = 'Daily';
+            break;
+        case '650000':
+            duration = 'Weekly';
+            break;
+        case '2500000':
+            duration = 'Monthly';
+            break;
+        // Add more cases as needed for other amounts
+    }
+
+    var handler = PaystackPop.setup({
+        key: 'pk_test_12658c234f2075a824b3e5862ac5a6b31fc5cd4f', // Replace with your actual Paystack public key
+        email: document.getElementById('basic-default-email').value,
+        amount: amountSelect,
+        currency: 'NGN',
+        ref: 'sub_' + Math.floor((Math.random() * 1000000000) + 1),
+        metadata: {
+            full_name: document.getElementById('fullName').value,
+            email: document.getElementById('basic-default-email').value,
+            amount: amountSelect,
+            duration: duration, // Include the selected duration in the metadata
+        },
+        callback: function (response) {
             // Call your PHP script with payment data
             var xhr = new XMLHttpRequest();
             xhr.open('GET', 'paystack_callback.php?reference=' + response.reference, true);
@@ -603,13 +622,13 @@ if (isset($_SESSION['username'])) {
 
             // Handle the response after payment (e.g., redirect to success page)
             alert('Payment successful. Transaction Reference: ' + response.reference);
-         },
-         onClose: function () {
+        },
+        onClose: function () {
             alert('Payment window closed');
-         }
-      });
-      handler.openIframe();
-   });
+        }
+    });
+    handler.openIframe();
+});
 </script>
 
   </body>
