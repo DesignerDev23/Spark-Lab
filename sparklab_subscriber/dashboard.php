@@ -17,33 +17,35 @@ $email = $_SESSION['email'];
 $sql = "SELECT * FROM subscribers WHERE email = '$email'";
 $result = $conn->query($sql);
 
+$subscriptions = []; // Initialize array to store subscriptions
+
 if ($result && $result->num_rows > 0) {
     $row = $result->fetch_assoc();
     $fullName = $row['full_name'];
     $profilePhoto = $row['profile_photo'];
 
-    // Fetch all subscriptions associated with the user
+    // Fetch active subscription details for the dashboard
     $subscriberId = $row['registration_id'];
-    $subscriptionSql = "SELECT * FROM subscription WHERE subscriber_id = '$subscriberId' ORDER BY expiration_date DESC";
+    $subscriptionSql = "SELECT * FROM subscription WHERE subscriber_id = '$subscriberId' AND expiration_date > NOW() ORDER BY expiration_date ASC";
     $subscriptionResult = $conn->query($subscriptionSql);
 
-    // Check if there are subscriptions
     if ($subscriptionResult && $subscriptionResult->num_rows > 0) {
-        // Fetch and display each subscription
         while ($subscriptionRow = $subscriptionResult->fetch_assoc()) {
+            // Fetch subscription details
             $subscriptionDuration = $subscriptionRow['subscription_duration'];
             $expirationDate = $subscriptionRow['expiration_date'];
             $paymentReference = $subscriptionRow['payment_reference'];
             $amount = $subscriptionRow['amount'];
-            // Display the subscription details here as needed
+            
+            // Add subscription details to the array
+            $subscriptions[] = [
+                'subscription_duration' => $subscriptionDuration,
+                'expiration_date' => $expirationDate,
+                'payment_reference' => $paymentReference,
+                'amount' => $amount
+            ];
         }
-    } else {
-        // No subscriptions found
-        echo "No subscriptions found for this user.";
     }
-} else {
-    // User not found
-    echo "User not found.";
 }
 
 // Close the database connection
@@ -469,22 +471,24 @@ $conn->close();
                                 
                             </div>
                             <ul class="p-0 m-0">
-                                <li class="d-flex mb-4 pb-1">
-                                    <div class="avatar flex-shrink-0 me-3">
-                                        <span class="avatar-initial rounded bg-label-primary">
-                                            <i class="bx bx-dollar-circle"></i>
-                                        </span>
-                                    </div>
-                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                        <div class="me-2">
-                                            <h6 class="mb-0"><?php echo $subscriptionDuration; ?></h6>
-                                            <small class="text-muted"><?php echo $expirationDate; ?></small>
-                                        </div>
-                                        <div class="user-progress">
-                                            <small class="fw-medium">Approved</small>
-                                        </div>
-                                    </div>
-                                </li>
+                            <?php foreach ($subscriptions as $subscription): ?>
+                                  <li class="d-flex mb-4 pb-1">
+                                      <div class="avatar flex-shrink-0 me-3">
+                                          <span class="avatar-initial rounded bg-label-primary">
+                                              <i class="bx bx-dollar-circle"></i>
+                                          </span>
+                                      </div>
+                                      <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                          <div class="me-2">
+                                              <h6 class="mb-0"><?php echo $subscription['subscription_duration']; ?></h6>
+                                              <small class="text-muted"><?php echo $subscription['expiration_date']; ?></small>
+                                          </div>
+                                          <div class="user-progress">
+                                              <small class="fw-medium">Approved</small>
+                                          </div>
+                                      </div>
+                                  </li>
+                              <?php endforeach; ?>
                                 <!-- Other list items -->
                             </ul>
                         </div>
@@ -517,21 +521,23 @@ $conn->close();
                       </div>
                       <div class="card-body">
                         <ul class="p-0 m-0">
+                        <?php foreach ($subscriptions as $subscription): ?>
                           <li class="d-flex mb-4 pb-1">
-                            <div class="avatar flex-shrink-0 me-3">
-                              <img src="assets/img/icons/unicons/wallet.png" alt="User" class="rounded" />
-                            </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <small class="text-muted d-block mb-1">Payment Reference</small>
-                                <h6 class="mb-0"><?php echo $paymentReference; ?></h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-1">
-                                <h6 class="mb-0"><?php echo $amount; ?></h6>
-                                <span class="text-muted">NGN</span>
-                            </div>
-                            </div>
+                              <div class="avatar flex-shrink-0 me-3">
+                                  <img src="assets/img/icons/unicons/wallet.png" alt="User" class="rounded" />
+                              </div>
+                              <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                  <div class="me-2">
+                                      <small class="text-muted d-block mb-1">Payment Reference</small>
+                                      <h6 class="mb-0"><?php echo $subscription['payment_reference']; ?></h6>
+                                  </div>
+                                  <div class="user-progress d-flex align-items-center gap-1">
+                                      <h6 class="mb-0"><?php echo $subscription['amount']; ?></h6>
+                                      <span class="text-muted">NGN</span>
+                                  </div>
+                              </div>
                           </li>
+                      <?php endforeach; ?>
                         </ul>
                       </div>
                     </div>
