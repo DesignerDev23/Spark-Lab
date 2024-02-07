@@ -5,6 +5,12 @@ include '../config/config.php';
 // Start the session
 session_start();
 
+if (!isset($_SESSION['email'])) {
+  // Redirect the user to the login page
+  header("Location: login.php");
+  exit(); // Stop further execution
+}
+
 // Check if the user is logged in
 if (isset($_SESSION['email'])) {
     // Retrieve user data from the database
@@ -38,7 +44,7 @@ if (isset($_SESSION['email'])) {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Blank layout - Layouts | Spark Lab - Bootstrap 5 HTML Admin Template - Pro</title>
+    <title>Payment | Spark Lab Hub</title>
 
     <meta name="description" content="" />
 
@@ -85,7 +91,8 @@ if (isset($_SESSION['email'])) {
                 <span class="app-brand-logo demo">
 
                   </span>
-                <span class="app-brand-text demo menu-text fw-bold ms-2">Spark Lab</span>
+                <span class="app-brand-text demo menu-text fw-bold  ms-2 text-capitalize">Spark Lab Hub</span>
+
               </a>
   
               <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
@@ -121,7 +128,14 @@ if (isset($_SESSION['email'])) {
               <li class="menu-item ">
                 <a href="check_status.php" class="menu-link ">
                   <i class="menu-icon  bx bx-check-double"></i>
-                  <div data-i18n="Dashboards">Check Status</div>
+                  <div data-i18n="Dashboards"> Payment Status </div>
+                  <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
+                </a>
+              </li>
+              <li class="menu-item ">
+                <a href="check_in.php" class="menu-link ">
+                  <i class="menu-icon  bx bx-log-in-circle"></i>
+                  <div data-i18n="Dashboards">Check-In</div>
                   <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
                 </a>
               </li>
@@ -265,7 +279,7 @@ if (isset($_SESSION['email'])) {
                           <div class="card-body">
                             <h5 class="card-title text-primary">Congratulations <?php echo $fullName; ?> 🎉</h5>
                             <p class="mb-4">
-                              Welcome back to your personalized dashboard! We're excited to have you return and continue your journey with <span class="fw-medium">Spark Lab</span>.
+                              Welcome back to your personalized dashboard! We're excited to have you return and continue your journey with <span class="fw-medium">Spark Lab Hub</span>.
                             </p>
   
                             <a href="javascript:;" class="btn btn-sm btn-outline-primary">View Badges</a>
@@ -364,50 +378,42 @@ if (isset($_SESSION['email'])) {
                       <small class="text-muted float-end">Make a new Subscription</small>
                     </div>
                     <div class="card-body">
-                      <form id="subscriberForm">
+                    <form id="subscriberForm" method="POST">
                         <div class="row mb-3">
-                          <label class="col-sm-2 col-form-label" for="basic-default-name">Subscriber</label>
-                          <div class="col-sm-10">
-                            <input type="text" class="form-control" id="basic-default-name" placeholder="John Doe"  value="<?php echo $fullName; ?>">
-                          </div>
+                            <label class="col-sm-2 col-form-label" for="subscriberName">Registration ID</label>
+                            <div class="col-sm-10">
+                                <input type="text" id="subscriberName" name="subscriberName" class="form-control" placeholder="John Doe" required>
+                            </div>
                         </div>
-                
+
                         <div class="row mb-3">
-                          <label class="col-sm-2 col-form-label" for="basic-default-email">Email</label>
-                          <div class="col-sm-10">
-                            <input type="text" id="basic-default-email" class="form-control" placeholder="john.doe@example.com"  value="<?php echo $email; ?>">
-                          </div>
+                            <label class="col-sm-2 col-form-label" for="basic-default-email">Email</label>
+                            <div class="col-sm-10">
+                                <input type="email" id="basic-default-email" name="email"  value="<?php echo"$email";?>" class="form-control" placeholder="john.doe@example.com" required>
+                            </div>
                         </div>
-                
+
                         <div class="row mb-3">
-                          <label class="col-sm-2 col-form-label" for="amountSelect">Select Amount</label>
-                          <div class="col-sm-10">
-                            <select class="form-select" id="amountSelect" aria-label="Select Amount">
-                              <option selected disabled>Select an amount</option>
-                              <option value="50000">Daily -  NGN 500.00</option>
-                              <option value="100000">Weekly -  NGN 1,000.00</option>
-                              <option value="200000">Monthly -  NGN 2,000.00</option>
-                              <option value="200000">Annually -  NGN 2,000.00</option>
-                              <!-- Add more options as needed -->
+                            <label class="col-sm-2 col-form-label" for="amountSelect">Select Amount</label>
+                            <div class="col-sm-10">
+                            <select class="form-select" id="amountSelect" name="amount" aria-label="Select Amount">
+                                <option selected disabled>Select an amount</option>
+                                <option value="150000">Daily - NGN 1,500.00</option>
+                                <option value="650000">Weekly - NGN 6,500.00</option>
+                                <option value="2500000">Monthly - NGN 25,000.00</option>
                             </select>
-                          </div>
+                            </div>
                         </div>
-                
+
                         <!-- Paystack Payment Section -->
                         <div class="row mb-3">
-                          <label class="col-sm-2 col-form-label" for="paystackBtn">Payment</label>
-                          <div class="col-sm-10">
-                            <button type="button" id="paystackBtn" class="btn btn-primary">Make Payment</button>
-                          </div>
+                            <label class="col-sm-2 col-form-label">Payment</label>
+                            <div class="col-sm-10">
+                                <button type="button" id="paystackBtn" class="btn btn-primary">Make Payment</button>
+                            </div>
                         </div>
-                
-                        <div class="row justify-content-end">
-                          <!-- <div class="col-sm-10">
-                            <button type="submit" class="btn btn-primary">Create New</button>
-                          </div> -->
-                        </div>
-                      </form>
-                    </div>
+                    </form>
+                                    </div>
                   </div>
                 </div>
 
@@ -422,10 +428,10 @@ if (isset($_SESSION['email'])) {
                   class="container-fluid d-flex flex-md-row flex-column justify-content-between align-items-md-center gap-1 container-p-x py-3">
                   <div>
                     <a
-                      href="https://demos.themeselection.com/Spark Lab-bootstrap-html-admin-template/html/vertical-menu-template/"
+                      href="https://demos.themeselection.com/Spark Lab Hub-bootstrap-html-admin-template/html/vertical-menu-template/"
                       target="_blank"
                       class="footer-text fw-bold"
-                      >Spark Lab</a
+                      >Spark Lab Hub</a
                     >
                     ©
                   </div>
@@ -477,35 +483,59 @@ if (isset($_SESSION['email'])) {
     <script async defer src="https://buttons.github.io/buttons.js"></script>
     <script src="assets/vendor/libs/bs-stepper/bs-stepper.js" /></script>
 
-   <script>
-   document.getElementById('paystackBtn').addEventListener('click', function () {
-      var handler = PaystackPop.setup({
-         key: 'pk_test_12658c234f2075a824b3e5862ac5a6b31fc5cd4f', // Replace with your actual Paystack public key
-         email: document.getElementById('basic-default-email').value,
-         amount: document.getElementById('amountSelect').value,
-         currency: 'NGN',
-         ref: 'sub_' + Math.floor((Math.random() * 1000000000) + 1),
-         metadata: {
-            full_name: document.getElementById('basic-default-name').value,
-            email: document.getElementById('basic-default-email').value,
-            amount: document.getElementById('amountSelect').value,
-         },
-         callback: function (response) {
-            // Call your PHP script with payment data
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'paystack_callback.php?reference=' + response.reference, true);
-            xhr.send();
 
-            // Handle the response after payment (e.g., redirect to success page)
-            alert('Payment successful. Transaction Reference: ' + response.reference);
-         },
-         onClose: function () {
-            alert('Payment window closed');
-         }
-      });
-      handler.openIframe();
-   });
-</script>
+    <script>
+        // Handle Paystack payment
+document.getElementById('paystackBtn').addEventListener('click', function() {
+    var fullName = document.getElementById('subscriberName').value;
+    var email = document.getElementById('basic-default-email').value;
+    var amount = document.getElementById('amountSelect').value;
+
+    // Initialize Paystack
+    var handler = PaystackPop.setup({
+        key: 'pk_test_12658c234f2075a824b3e5862ac5a6b31fc5cd4f',
+        email: email,
+        amount: amount,
+        currency: 'NGN',
+        ref: 'SUBSCR_' + Math.floor((Math.random() * 1000000000) + 1), // Generate a unique reference
+        onClose: function() {
+            alert('Payment closed');
+        },
+        callback: function(response) {
+            // Handle successful payment
+            var paymentReference = response.reference;
+
+            // Proceed to form submission
+            submitForm(fullName, email, amount, paymentReference);
+        }
+    });
+    handler.openIframe();
+});
+
+// Function to submit form data after successful payment
+function submitForm(fullName, email, amount, paymentReference) {
+    var formData = new FormData();
+    formData.append('fullName', fullName);
+    formData.append('email', email);
+    formData.append('amount', amount);
+    formData.append('paymentReference', paymentReference);
+
+    // Send form data to server
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'process_subscription.php', true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            // Handle success
+            console.log(xhr.responseText);
+        } else {
+            // Handle errors
+            console.error('Error occurred while processing subscription: ' + xhr.statusText);
+        }
+    };
+    xhr.send(formData);
+}
+
+    </script>
 
 
   </body>

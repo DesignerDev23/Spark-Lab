@@ -96,7 +96,7 @@ $conn->close();
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Blank layout - Layouts | Spark Lab - Bootstrap 5 HTML Admin Template - Pro</title>
+    <title>New Subscriber | Spark Lab Hub</title>
 
     <meta name="description" content="" />
 
@@ -144,7 +144,8 @@ $conn->close();
                 <span class="app-brand-logo demo">
                  
                 </span>
-                <span class="app-brand-text demo menu-text fw-bold ms-2">Spark Lab</span>
+                <span class="app-brand-text demo menu-text fw-bold  ms-2 text-capitalize">Spark Lab Hub</span>
+
               </a>
   
               <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
@@ -193,7 +194,7 @@ $conn->close();
               <li class="menu-item ">
                 <a href="check_status.php" class="menu-link ">
                   <i class="menu-icon  bx bx-check-double"></i>
-                  <div data-i18n="Dashboards">Check Status</div>
+                  <div data-i18n="Dashboards"> Payment Status </div>
                   <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
                 </a>
               </li>
@@ -262,11 +263,11 @@ $conn->close();
                   <!-- <li class="nav-item lh-1 me-3">
                     <a
                       class="github-button"
-                      href="https://github.com/themeselection/Spark Lab-html-admin-template-free"
+                      href="https://github.com/themeselection/Spark Lab Hub-html-admin-template-free"
                       data-icon="octicon-star"
                       data-size="large"
                       data-show-count="true"
-                      aria-label="Star themeselection/Spark Lab-html-admin-template-free on GitHub"
+                      aria-label="Star themeselection/Spark Lab Hub-html-admin-template-free on GitHub"
                       >Star</a
                     >
                   </li> -->
@@ -322,7 +323,7 @@ $conn->close();
                         <div class="dropdown-divider"></div>
                       </li>
                       <li>
-                        <a class="dropdown-item" href="javascript:void(0);">
+                        <a class="dropdown-item" href="logout.php">
                           <i class="bx bx-power-off me-2"></i>
                           <span class="align-middle">Log Out</span>
                         </a>
@@ -349,7 +350,7 @@ $conn->close();
                           <div class="card-body">
                             <h5 class="card-title text-primary">Congratulations <?php echo $fullName; ?> 🎉</h5>
                             <p class="mb-4">
-                              Welcome back to your personalized dashboard! We're excited to have you return and continue your journey with <span class="fw-medium">Spark Lab</span>.
+                              Welcome back to your personalized dashboard! We're excited to have you return and continue your journey with <span class="fw-medium">Spark Lab Hub</span>.
                             </p>
   
                             <a href="javascript:;" class="btn btn-sm btn-outline-primary">View Badges</a>
@@ -571,10 +572,10 @@ $conn->close();
                   class="container-fluid d-flex flex-md-row flex-column justify-content-between align-items-md-center gap-1 container-p-x py-3">
                   <div>
                     <a
-                      href="https://demos.themeselection.com/Spark Lab-bootstrap-html-admin-template/html/vertical-menu-template/"
+                      href="https://demos.themeselection.com/Spark Lab Hub-bootstrap-html-admin-template/html/vertical-menu-template/"
                       target="_blank"
                       class="footer-text fw-bold"
-                      >Spark Lab</a
+                      >Spark Lab Hub</a
                     >
                     ©
                   </div>

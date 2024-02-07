@@ -10,8 +10,8 @@
 // JS global variables
 let config = {
   colors: {
-    primary: '#696cff',
-    secondary: '#8592a3',
+    primary: '#014D87',
+    secondary: '#FCB040',
     success: '#71dd37',
     info: '#03c3ec',
     warning: '#ffab00',

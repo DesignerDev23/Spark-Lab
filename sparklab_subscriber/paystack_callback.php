@@ -44,13 +44,13 @@ if ($paymentData['status'] === true) {
 
             // Determine subscription duration based on the amount
             switch ($amount) {
-                case 500:
+                case 1500:
                     $subscriptionDuration = 'Daily';
                     break;
-                case 1000:
+                case 6500:
                     $subscriptionDuration = 'Weekly';
                     break;
-                case 2000:
+                case 25000:
                     $subscriptionDuration = 'Monthly';
                     break;
                 // Add more cases as needed

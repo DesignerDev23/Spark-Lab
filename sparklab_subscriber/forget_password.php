@@ -13,7 +13,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Forgot Password Basic - Pages | SparkLab - Bootstrap 5 HTML Admin Template - Pro</title>
+    <title>Forgot Password | SparkLab</title>
 
     <meta name="description" content="" />
 
@@ -88,20 +88,20 @@
                               <mask id="mask-2" fill="white">
                                 <use xlink:href="#path-1"></use>
                               </mask>
-                              <use fill="#696cff" xlink:href="#path-1"></use>
+                              <use fill="#014D87" xlink:href="#path-1"></use>
                               <g id="Path-3" mask="url(#mask-2)">
-                                <use fill="#696cff" xlink:href="#path-3"></use>
+                                <use fill="#014D87" xlink:href="#path-3"></use>
                                 <use fill-opacity="0.2" fill="#FFFFFF" xlink:href="#path-3"></use>
                               </g>
                               <g id="Path-4" mask="url(#mask-2)">
-                                <use fill="#696cff" xlink:href="#path-4"></use>
+                                <use fill="#014D87" xlink:href="#path-4"></use>
                                 <use fill-opacity="0.2" fill="#FFFFFF" xlink:href="#path-4"></use>
                               </g>
                             </g>
                             <g
                               id="Triangle"
                               transform="translate(19.000000, 11.000000) rotate(-300.000000) translate(-19.000000, -11.000000) ">
-                              <use fill="#696cff" xlink:href="#path-5"></use>
+                              <use fill="#014D87" xlink:href="#path-5"></use>
                               <use fill-opacity="0.2" fill="#FFFFFF" xlink:href="#path-5"></use>
                             </g>
                           </g>

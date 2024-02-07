@@ -26,13 +26,13 @@ if ($result && $result->num_rows > 0) {
 
     // Fetch active subscription details for the dashboard
     $subscriberId = $row['registration_id'];
-    $subscriptionSql = "SELECT * FROM subscription WHERE subscriber_id = '$subscriberId' AND expiration_date > NOW() ORDER BY expiration_date ASC";
+    $subscriptionSql = "SELECT * FROM subscriptions WHERE subscriber_id = '$subscriberId' AND expiration_date > NOW() ORDER BY expiration_date ASC";
     $subscriptionResult = $conn->query($subscriptionSql);
 
     if ($subscriptionResult && $subscriptionResult->num_rows > 0) {
         while ($subscriptionRow = $subscriptionResult->fetch_assoc()) {
             // Fetch subscription details
-            $subscriptionDuration = $subscriptionRow['subscription_duration'];
+            $subscriptionDuration = $subscriptionRow['duration'];
             $expirationDate = $subscriptionRow['expiration_date'];
             $paymentReference = $subscriptionRow['payment_reference'];
             $amount = $subscriptionRow['amount'];
@@ -69,7 +69,7 @@ $conn->close();
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Blank layout - Layouts | Spark Lab - Bootstrap 5 HTML Admin Template - Pro</title>
+    <title>Dashboard | Spark Lab Hub</title>
 
     <meta name="description" content="" />
 
@@ -139,20 +139,20 @@ $conn->close();
                             <mask id="mask-2" fill="white">
                               <use xlink:href="#path-1"></use>
                             </mask>
-                            <use fill="#696cff" xlink:href="#path-1"></use>
+                            <use fill="#014D87" xlink:href="#path-1"></use>
                             <g id="Path-3" mask="url(#mask-2)">
-                              <use fill="#696cff" xlink:href="#path-3"></use>
+                              <use fill="#014D87" xlink:href="#path-3"></use>
                               <use fill-opacity="0.2" fill="#FFFFFF" xlink:href="#path-3"></use>
                             </g>
                             <g id="Path-4" mask="url(#mask-2)">
-                              <use fill="#696cff" xlink:href="#path-4"></use>
+                              <use fill="#014D87" xlink:href="#path-4"></use>
                               <use fill-opacity="0.2" fill="#FFFFFF" xlink:href="#path-4"></use>
                             </g>
                           </g>
                           <g
                             id="Triangle"
                             transform="translate(19.000000, 11.000000) rotate(-300.000000) translate(-19.000000, -11.000000) ">
-                            <use fill="#696cff" xlink:href="#path-5"></use>
+                            <use fill="#014D87" xlink:href="#path-5"></use>
                             <use fill-opacity="0.2" fill="#FFFFFF" xlink:href="#path-5"></use>
                           </g>
                         </g>
@@ -160,7 +160,8 @@ $conn->close();
                     </g>
                   </svg> -->
                 </span>
-                <span class="app-brand-text demo menu-text fw-bold ms-2">Spark Lab</span>
+                <span class="app-brand-text demo menu-text fw-bold  ms-2 text-capitalize">Spark Lab Hub</span>
+
               </a>
   
               <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
@@ -209,7 +210,15 @@ $conn->close();
               <li class="menu-item ">
                 <a href="check_status.php" class="menu-link ">
                   <i class="menu-icon  bx bx-check-double"></i>
-                  <div data-i18n="Dashboards">Check Status</div>
+                  <div data-i18n="Dashboards"> Payment Status </div>
+                  <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
+                </a>
+              </li>
+
+              <li class="menu-item ">
+                <a href="check_in.php" class="menu-link ">
+                  <i class="menu-icon  bx bx-log-in-circle"></i>
+                  <div data-i18n="Dashboards">Check-In</div>
                   <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
                 </a>
               </li>
@@ -276,11 +285,11 @@ $conn->close();
                   <!-- <li class="nav-item lh-1 me-3">
                     <a
                       class="github-button"
-                      href="https://github.com/themeselection/Spark Lab-html-admin-template-free"
+                      href="https://github.com/themeselection/Spark Lab Hub-html-admin-template-free"
                       data-icon="octicon-star"
                       data-size="large"
                       data-show-count="true"
-                      aria-label="Star themeselection/Spark Lab-html-admin-template-free on GitHub"
+                      aria-label="Star themeselection/Spark Lab Hub-html-admin-template-free on GitHub"
                       >Star</a
                     >
                   </li> -->
@@ -336,7 +345,7 @@ $conn->close();
                         <div class="dropdown-divider"></div>
                       </li>
                       <li>
-                        <a class="dropdown-item" href="javascript:void(0);">
+                        <a class="dropdown-item" href="logout.php">
                           <i class="bx bx-power-off me-2"></i>
                           <span class="align-middle">Log Out</span>
                         </a>
@@ -364,7 +373,7 @@ $conn->close();
                             
                           <h5 class="card-title text-primary">Congratulations <?php echo $fullName; ?> 🎉</h5>
                             <p class="mb-4">
-                              Welcome back to your personalized dashboard! We're excited to have you return and continue your journey with <span class="fw-medium">Spark Lab</span>.
+                              Welcome back to your personalized dashboard! We're excited to have you return and continue your journey with <span class="fw-medium">Spark Lab Hub</span>.
                             </p>
   
                             <a href="javascript:;" class="btn btn-sm btn-outline-primary">View Badges</a>
@@ -553,10 +562,10 @@ $conn->close();
                   class="container-fluid d-flex flex-md-row flex-column justify-content-between align-items-md-center gap-1 container-p-x py-3">
                   <div>
                     <a
-                      href="https://demos.themeselection.com/Spark Lab-bootstrap-html-admin-template/html/vertical-menu-template/"
+                      href="https://demos.themeselection.com/Spark Lab Hub-bootstrap-html-admin-template/html/vertical-menu-template/"
                       target="_blank"
                       class="footer-text fw-bold"
-                      >Spark Lab</a
+                      >Spark Lab Hub</a
                     >
                     ©
                   </div>

@@ -1,3 +1,84 @@
+<?php
+// Include your database connection
+include '../config/config.php';
+
+// Start the session
+session_start();
+
+if (!isset($_SESSION['email'])) {
+  // Redirect the user to the login page
+  header("Location: login.php");
+  exit(); // Stop further execution
+}
+
+// Check if the user is logged in
+if (isset($_SESSION['email'])) {
+    // Retrieve user data from the database
+    $email = $_SESSION['email'];
+    $sql = "SELECT * FROM subscribers WHERE email = '$email'";
+    $result = $conn->query($sql);
+
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $fullName = $row['full_name'];
+        $profilePhoto = $row['profile_photo'];
+
+        // Close the database connection
+        $conn->close();
+    }
+}
+
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Retrieve form data
+    $registrationId = $_POST['registrationId'];
+
+    // Perform database connection
+    $servername = "localhost";
+    $username = "root"; // Update with your database username
+    $password = ""; // Update with your database password
+    $dbname = "sparklab";   // Update with your database name
+
+    // Create connection
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    // Check connection
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    // Check for an active subscription using the registration ID
+    $subscriptionQuery = "SELECT * FROM subscriptions WHERE subscriber_id = '$registrationId' AND expiration_date > NOW()";
+    $subscriptionResult = $conn->query($subscriptionQuery);
+
+    if ($subscriptionResult && $subscriptionResult->num_rows > 0) {
+        // Subscriber has an active subscription, proceed with storing check-in information
+
+        // Prepare data for check-in table insertion
+        $checkInDate = date('Y-m-d H:i:s'); // Current date and time
+        // You can add more check-in information as needed
+
+        // Insert check-in information into the check-in table
+        $checkInSql = "INSERT INTO check_in (subscriber_id, name, email, check_in_date)
+                       VALUES ('$registrationId', '$fullName', '$email', '$checkInDate')";
+
+        if ($conn->query($checkInSql) === TRUE) {
+            // Trigger JavaScript to display a Swift alert
+            echo "<script> alert('Check-in information stored successfully!'); </script>";
+        } else {
+            echo "Error: " . $checkInSql . "<br>" . $conn->error;
+        }
+    } else {
+        // Trigger JavaScript to display a Swift alert
+        echo "<script> alert('Subscriber does not have an active subscription.'); </script>";
+    }
+
+    // Close database connection
+    $conn->close();
+}
+?>
+
+
 <!DOCTYPE html>
 
 <html
@@ -13,7 +94,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Blank layout - Layouts | Spark Lab Hub - Bootstrap 5 HTML Admin Template - Pro</title>
+    <title>Check-in | Spark Lab Hub</title>
 
     <meta name="description" content="" />
 
@@ -34,7 +115,6 @@
     <link rel="stylesheet" href="assets/vendor/css/theme-default.css" class="template-customizer-theme-css" />
     <link rel="stylesheet" href="assets/css/demo.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-    
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js">
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
@@ -44,27 +124,7 @@
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="assets/js/config.js"></script>
-     <!-- Add Bootstrap CSS -->
-    <!-- Add Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.1/css/bootstrap.min.css">
-
-    <!-- Add DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css">
-
-    <!-- Add DataTables Buttons CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.7.0/css/buttons.dataTables.min.css">
-
-    <!-- Add jQuery -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-
-    <!-- Add DataTables JS -->
-    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
-
-    <!-- Add DataTables Buttons JS -->
-    <script src="https://cdn.datatables.net/buttons/1.7.0/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.7.0/js/buttons.html5.min.js"></script>
-
+    <script src="https://js.paystack.co/v1/inline.js"></script>
 
 
   </head>
@@ -79,54 +139,8 @@
             <div class="app-brand demo">
               <a href="dashboard.php" class="app-brand-link">
                 <span class="app-brand-logo demo">
-                      <!-- <svg
-                    width="25"
-                    viewBox="0 0 25 42"
-                    version="1.1"
-                    xmlns="http://www.w3.org/2000/svg"
-                    xmlns:xlink="http://www.w3.org/1999/xlink">
-                    <defs>
-                      <path
-                        d="M13.7918663,0.358365126 L3.39788168,7.44174259 C0.566865006,9.69408886 -0.379795268,12.4788597 0.557900856,15.7960551 C0.68998853,16.2305145 1.09562888,17.7872135 3.12357076,19.2293357 C3.8146334,19.7207684 5.32369333,20.3834223 7.65075054,21.2172976 L7.59773219,21.2525164 L2.63468769,24.5493413 C0.445452254,26.3002124 0.0884951797,28.5083815 1.56381646,31.1738486 C2.83770406,32.8170431 5.20850219,33.2640127 7.09180128,32.5391577 C8.347334,32.0559211 11.4559176,30.0011079 16.4175519,26.3747182 C18.0338572,24.4997857 18.6973423,22.4544883 18.4080071,20.2388261 C17.963753,17.5346866 16.1776345,15.5799961 13.0496516,14.3747546 L10.9194936,13.4715819 L18.6192054,7.984237 L13.7918663,0.358365126 Z"
-                        id="path-1"></path>
-                      <path
-                        d="M5.47320593,6.00457225 C4.05321814,8.216144 4.36334763,10.0722806 6.40359441,11.5729822 C8.61520715,12.571656 10.0999176,13.2171421 10.8577257,13.5094407 L15.5088241,14.433041 L18.6192054,7.984237 C15.5364148,3.11535317 13.9273018,0.573395879 13.7918663,0.358365126 C13.5790555,0.511491653 10.8061687,2.3935607 5.47320593,6.00457225 Z"
-                        id="path-3"></path>
-                      <path
-                        d="M7.50063644,21.2294429 L12.3234468,23.3159332 C14.1688022,24.7579751 14.397098,26.4880487 13.008334,28.506154 C11.6195701,30.5242593 10.3099883,31.790241 9.07958868,32.3040991 C5.78142938,33.4346997 4.13234973,34 4.13234973,34 C4.13234973,34 2.75489982,33.0538207 2.37032616e-14,31.1614621 C-0.55822714,27.8186216 -0.55822714,26.0572515 -4.05231404e-15,25.8773518 C0.83734071,25.6075023 2.77988457,22.8248993 3.3049379,22.52991 C3.65497346,22.3332504 5.05353963,21.8997614 7.50063644,21.2294429 Z"
-                        id="path-4"></path>
-                      <path
-                        d="M20.6,7.13333333 L25.6,13.8 C26.2627417,14.6836556 26.0836556,15.9372583 25.2,16.6 C24.8538077,16.8596443 24.4327404,17 24,17 L14,17 C12.8954305,17 12,16.1045695 12,15 C12,14.5672596 12.1403557,14.1461923 12.4,13.8 L17.4,7.13333333 C18.0627417,6.24967773 19.3163444,6.07059163 20.2,6.73333333 C20.3516113,6.84704183 20.4862915,6.981722 20.6,7.13333333 Z"
-                        id="path-5"></path>
-                    </defs>
-                    <g id="g-app-brand" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <g id="Brand-Logo" transform="translate(-27.000000, -15.000000)">
-                        <g id="Icon" transform="translate(27.000000, 15.000000)">
-                          <g id="Mask" transform="translate(0.000000, 8.000000)">
-                            <mask id="mask-2" fill="white">
-                              <use xlink:href="#path-1"></use>
-                            </mask>
-                            <use fill="#014D87" xlink:href="#path-1"></use>
-                            <g id="Path-3" mask="url(#mask-2)">
-                              <use fill="#014D87" xlink:href="#path-3"></use>
-                              <use fill-opacity="0.2" fill="#FFFFFF" xlink:href="#path-3"></use>
-                            </g>
-                            <g id="Path-4" mask="url(#mask-2)">
-                              <use fill="#014D87" xlink:href="#path-4"></use>
-                              <use fill-opacity="0.2" fill="#FFFFFF" xlink:href="#path-4"></use>
-                            </g>
-                          </g>
-                          <g
-                            id="Triangle"
-                            transform="translate(19.000000, 11.000000) rotate(-300.000000) translate(-19.000000, -11.000000) ">
-                            <use fill="#014D87" xlink:href="#path-5"></use>
-                            <use fill-opacity="0.2" fill="#FFFFFF" xlink:href="#path-5"></use>
-                          </g>
-                        </g>
-                      </g>
-                    </g>
-                  </svg> -->
-                </span>
+
+                  </span>
                 <span class="app-brand-text demo menu-text fw-bold  ms-2 text-capitalize">Spark Lab Hub</span>
 
               </a>
@@ -138,7 +152,7 @@
   
             <div class="menu-inner-shadow"></div>
   
-            <ul class="menu-inner py-1">
+             <ul class="menu-inner py-1">
               <!-- Dashboards -->
               <li class="menu-item">
                 <a href="dashboard.php" class="menu-link ">
@@ -146,19 +160,13 @@
                   <div data-i18n="Dashboards">Dashboards</div>
                   <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
                 </a>
-                </li>
-
-              <li class="menu-header small text-uppercase"><span class="menu-header-text">Subscribers</span></li>
-              <!-- Layouts -->
-              <li class="menu-item ">
-                <a href="add_subscriber.php" class="menu-link">
-                  <i class="menu-icon  bx bx-user-plus"></i>
-                  <div data-i18n="Dashboards">Add Subscriber</div>
-                  <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
-                </a>
+          
               </li>
 
-              <li class="menu-item ">
+              <li class="menu-header small text-uppercase"><span class="menu-header-text">Subscription</span></li>
+       
+
+              <li class="menu-item">
                 <a href="subscribe.php" class="menu-link ">
                   <i class="menu-icon  bx bx-credit-card"></i>
                   <div data-i18n="Dashboards">Subscribe</div>
@@ -166,14 +174,7 @@
                 </a>
               </li>
 
-              <li class="menu-item ">
-                <a href="manage_subscribers.php" class="menu-link ">
-                  <i class="menu-icon  bx bx-group"></i>
-                  <div data-i18n="Dashboards">Manage Subscribers</div>
-                  <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
-                </a>
-              </li>
-
+             
               <li class="menu-item ">
                 <a href="check_status.php" class="menu-link ">
                   <i class="menu-icon  bx bx-check-double"></i>
@@ -183,20 +184,25 @@
               </li>
 
               <li class="menu-item active">
-                <a href="attendance.php" class="menu-link ">
-                  <i class="menu-icon  bx bx-user-check"></i>
-                  <div data-i18n="Dashboards">Active Subscribers</div>
+                <a href="check_in.php" class="menu-link ">
+                  <i class="menu-icon  bx bx-log-in-circle"></i>
+                  <div data-i18n="Dashboards">Check-In</div>
                   <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
                 </a>
               </li>
+              <!-- <li class="menu-item ">
+                <a href="attendance.php" class="menu-link ">
+                  <i class="menu-icon  bx bx-user-check"></i>
+                  <div data-i18n="Dashboards">Active Subscribers</div>
+                </a>
+              </li> -->
               
               <li class="menu-header small text-uppercase"><span class="menu-header-text">Activities</span></li>
               <!-- Layouts -->
               <li class="menu-item ">
                 <a href="generate_report.php" class="menu-link menu-toggle">
                   <i class="menu-icon  bx bx-detail"></i>
-                  <div data-i18n="Dashboards">Generate Report</div>
-                  <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
+                  <div data-i18n="Dashboards">Calender</div>
                 </a>
               </li>
 
@@ -211,7 +217,7 @@
              
   
             
-          </aside>
+       </aside>
           <!-- / Menu -->
   
           <!-- Layout container -->
@@ -243,77 +249,67 @@
   
                 <ul class="navbar-nav flex-row align-items-center ms-auto">
                   <!-- Place this tag where you want the button to render. -->
-                  <!-- <li class="nav-item lh-1 me-3">
-                    <a
-                      class="github-button"
-                      href="https://github.com/themeselection/Spark Lab Hub-html-admin-template-free"
-                      data-icon="octicon-star"
-                      data-size="large"
-                      data-show-count="true"
-                      aria-label="Star themeselection/Spark Lab Hub-html-admin-template-free on GitHub"
-                      >Star</a
-                    >
-                  </li> -->
+              
   
-                  <!-- User -->
-                  <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                    <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                      <div class="avatar avatar-online">
-                        <img src="assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle" />
-                      </div>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li>
-                        <a class="dropdown-item" href="#">
-                          <div class="d-flex">
-                            <div class="flex-shrink-0 me-3">
-                              <div class="avatar avatar-online">
-                                <img src="assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle" />
-                              </div>
-                            </div>
-                            <div class="flex-grow-1">
-                              <span class="fw-medium d-block">John Doe</span>
-                              <small class="text-muted">Admin</small>
+                 <!-- User -->
+                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                    <img src="<?php echo $profilePhoto; ?>" alt="Profile Photo" class="w-px-40 h-40 rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                            <img src="<?php echo $profilePhoto; ?>" alt="Profile Photo" class="w-px-40 h-40 rounded-circle" />
                             </div>
                           </div>
-                        </a>
-                      </li>
-                      <li>
-                        <div class="dropdown-divider"></div>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href="#">
-                          <i class="bx bx-user me-2"></i>
-                          <span class="align-middle">My Profile</span>
-                        </a>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href="#">
-                          <i class="bx bx-cog me-2"></i>
-                          <span class="align-middle">Settings</span>
-                        </a>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href="#">
-                          <span class="d-flex align-items-center align-middle">
-                            <i class="flex-shrink-0 bx bx-credit-card me-2"></i>
-                            <span class="flex-grow-1 align-middle ms-1">Billing</span>
-                            <span class="flex-shrink-0 badge badge-center rounded-pill bg-danger w-px-20 h-px-20">4</span>
-                          </span>
-                        </a>
-                      </li>
-                      <li>
-                        <div class="dropdown-divider"></div>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href="logout.php">
-                          <i class="bx bx-power-off me-2"></i>
-                          <span class="align-middle">Log Out</span>
-                        </a>
-                      </li>
-                    </ul>
-                  </li>
-                  <!--/ User -->
+                          <div class="flex-grow-1">
+                          <span class="fw-medium d-block"><?php echo $fullName; ?></span>
+                          <small class="text-muted">Subscriber</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider"></div>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <i class="bx bx-user me-2"></i>
+                        <span class="align-middle">My Profile</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <i class="bx bx-cog me-2"></i>
+                        <span class="align-middle">Settings</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <span class="d-flex align-items-center align-middle">
+                          <i class="flex-shrink-0 bx bx-credit-card me-2"></i>
+                          <span class="flex-grow-1 align-middle ms-1">Billing</span>
+                          <span class="flex-shrink-0 badge badge-center rounded-pill bg-danger w-px-20 h-px-20">4</span>
+                        </span>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider"></div>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="logout.php">
+                        <i class="bx bx-power-off me-2"></i>
+                        <span class="align-middle">Log Out</span>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <!--/ User -->
                 </ul>
               </div>
             </nav>
@@ -331,7 +327,7 @@
                       <div class="d-flex align-items-end row">
                         <div class="col-sm-7">
                           <div class="card-body">
-                            <h5 class="card-title text-primary">Congratulations John! 🎉</h5>
+                            <h5 class="card-title text-primary">Congratulations <?php echo $fullName; ?> 🎉</h5>
                             <p class="mb-4">
                               Welcome back to your personalized dashboard! We're excited to have you return and continue your journey with <span class="fw-medium">Spark Lab Hub</span>.
                             </p>
@@ -421,57 +417,48 @@
                     </div>
                   </div>
                   <!-- Total Revenue -->
-
-
-                
-               
-                  
+                                  
                 </div>
+
+
                 <div class="col-xxl">
                   <div class="card mb-4">
-                    <div class="card-header align-items-center justify-content-between">
-                      <table id="dataTable" class="datatables-basic ">
-                      <thead>
-                          <tr>
-                              <th>Photo</th>
-                              <th>Name</th>
-                              <th>Email</th>
-                              <th>Subscription Status</th>
-                              <th>Action</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <!-- Sample Data -->
-                          <tr>
-                            <td><img src="path/to/photo1.jpg" alt="Photo 1" width="50"></td>
-                              <td>John Doe</td>
-                              <td>john@example.com</td>
-                              <td>Active</td>
-                              <td>
-                                  <button class="btn btn-primary">View</button>
-                                  <!-- <button class="btn btn-danger">Delete</button> -->
-                              </td>
-                          </tr>
-                          <tr>
-                            <td><img src="path/to/photo2.jpg" alt="Photo 2" width="50"></td>
-                              <td>Jane Doe</td>
-                              <td>jane@example.com</td>
-                              <td>Inactive</td>
-                              <td>
-                                  <button class="btn btn-primary">View</button>
-                                  <!-- <button class="btn btn-danger">Delete</button> -->
-                              </td>
-                          </tr>
-                          <!-- Add more sample data as needed -->
-                      </tbody>
-                  </table>
-                </div>
-              </div>
-                </div>
-</div>
-              
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                      <h5 class="mb-0">Subscription</h5>
+                      <small class="text-muted float-end">Make a new Subscription</small>
+                    </div>
+                    <div class="card-body">
+                        <form id="subscriberCheckinForm" method="POST" action="check_in.php">
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label" for="fullName">Full Name</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="fullName" name="fullName" placeholder="John Doe" required>
+                                </div>
+                            </div>
 
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label" for="email">Email</label>
+                                <div class="col-sm-10">
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="john.doe@example.com" required>
+                                </div>
+                            </div>
 
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label" for="registrationId">Registration ID</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="registrationId" name="registrationId" placeholder="Subscriber Registration ID" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-10 offset-sm-2">
+                                    <button type="submit" class="btn btn-primary">Check In</button>
+                                </div>
+                            </div>
+                        </form>
+                                    </div>
+                  </div>
+                </div>
 
               </div>
                 
@@ -538,34 +525,61 @@
     <!-- Place this tag in your head or just before your close body tag. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
     <script src="assets/vendor/libs/bs-stepper/bs-stepper.js" /></script>
-    	<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-	<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-	<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+
 
     <script>
-      // Initialize DataTable
-      $(document).ready(function() {
-          var table = $('#dataTable').DataTable({
-              dom: 'Bfrtip',
-              buttons: [
-                  'copy', 'csv', 'excel', 'pdf', 'print'
-              ],
-              paging: true,
-              // searching: true
-          });
-  
-          // Add event listener for view and delete buttons
-          $('#dataTable tbody').on('click', '.btn-view', function() {
-              var data = table.row($(this).parents('tr')).data();
-              alert('View clicked for: ' + data[0]);
-          });
-  
-          $('#dataTable tbody').on('click', '.btn-delete', function() {
-              var data = table.row($(this).parents('tr')).data();
-              alert('Delete clicked for: ' + data[0]);
-          });
-      });
-  </script>
+        // Handle Paystack payment
+document.getElementById('paystackBtn').addEventListener('click', function() {
+    var fullName = document.getElementById('subscriberName').value;
+    var email = document.getElementById('basic-default-email').value;
+    var amount = document.getElementById('amountSelect').value;
+
+    // Initialize Paystack
+    var handler = PaystackPop.setup({
+        key: 'pk_test_12658c234f2075a824b3e5862ac5a6b31fc5cd4f',
+        email: email,
+        amount: amount,
+        currency: 'NGN',
+        ref: 'SUBSCR_' + Math.floor((Math.random() * 1000000000) + 1), // Generate a unique reference
+        onClose: function() {
+            alert('Payment closed');
+        },
+        callback: function(response) {
+            // Handle successful payment
+            var paymentReference = response.reference;
+
+            // Proceed to form submission
+            submitForm(fullName, email, amount, paymentReference);
+        }
+    });
+    handler.openIframe();
+});
+
+// Function to submit form data after successful payment
+function submitForm(fullName, email, amount, paymentReference) {
+    var formData = new FormData();
+    formData.append('fullName', fullName);
+    formData.append('email', email);
+    formData.append('amount', amount);
+    formData.append('paymentReference', paymentReference);
+
+    // Send form data to server
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'process_subscription.php', true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            // Handle success
+            console.log(xhr.responseText);
+        } else {
+            // Handle errors
+            console.error('Error occurred while processing subscription: ' + xhr.statusText);
+        }
+    };
+    xhr.send(formData);
+}
+
+    </script>
+
 
   </body>
 </html>

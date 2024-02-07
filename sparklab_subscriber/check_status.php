@@ -5,6 +5,12 @@ include '../config/config.php';
 // Start the session
 session_start();
 
+if (!isset($_SESSION['email'])) {
+  // Redirect the user to the login page
+  header("Location: login.php");
+  exit(); // Stop further execution
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if payment_reference is set in the POST data
     if (isset($_POST['payment_reference'])) {
@@ -69,7 +75,7 @@ if (isset($_SESSION['email'])) {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Blank layout - Layouts | Spark Lab - Bootstrap 5 HTML Admin Template - Pro</title>
+    <title>Subscription Status | Spark Lab Hub</title>
 
     <meta name="description" content="" />
 
@@ -117,7 +123,8 @@ if (isset($_SESSION['email'])) {
                 <span class="app-brand-logo demo">
                  
                 </span>
-                <span class="app-brand-text demo menu-text fw-bold ms-2">Spark Lab</span>
+                <span class="app-brand-text demo menu-text fw-bold  ms-2 text-capitalize">Spark Lab Hub</span>
+
               </a>
   
               <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
@@ -151,10 +158,17 @@ if (isset($_SESSION['email'])) {
               <li class="menu-item active">
                 <a href="check_status.php" class="menu-link ">
                   <i class="menu-icon  bx bx-check-double"></i>
-                  <div data-i18n="Dashboards">Check Status</div>
+                  <div data-i18n="Dashboards"> Payment Status </div>
                   <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
                 </a>
-              </li>            
+              </li>  
+              <li class="menu-item ">
+                <a href="check_in.php" class="menu-link ">
+                  <i class="menu-icon  bx bx-log-in-circle"></i>
+                  <div data-i18n="Dashboards">Check-In</div>
+                  <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
+                </a>
+              </li>          
               <li class="menu-header small text-uppercase"><span class="menu-header-text">Activities</span></li>
               <!-- Layouts -->
               <li class="menu-item ">
@@ -287,7 +301,7 @@ if (isset($_SESSION['email'])) {
                           <div class="card-body">
                             <h5 class="card-title text-primary">Congratulations <?php echo $fullName; ?>! 🎉</h5>
                             <p class="mb-4">
-                              Welcome back to your personalized dashboard! We're excited to have you return and continue your journey with <span class="fw-medium">Spark Lab</span>.
+                              Welcome back to your personalized dashboard! We're excited to have you return and continue your journey with <span class="fw-medium">Spark Lab Hub</span>.
                             </p>
   
                             <a href="javascript:;" class="btn btn-sm btn-outline-primary">View Badges</a>
@@ -395,7 +409,7 @@ if (isset($_SESSION['email'])) {
                       </div>
                       <div class="row justify-content-end">
                           <div class="col-sm-10">
-                              <button type="button" class="btn btn-primary" onclick="checkStatus()">Check Status</button>
+                              <button type="button" class="btn btn-primary" onclick="checkStatus()"> Payment Status </button>
                           </div>
                       </div>
                   </form>
@@ -414,10 +428,10 @@ if (isset($_SESSION['email'])) {
                   class="container-fluid d-flex flex-md-row flex-column justify-content-between align-items-md-center gap-1 container-p-x py-3">
                   <div>
                     <a
-                      href="https://demos.themeselection.com/Spark Lab-bootstrap-html-admin-template/html/vertical-menu-template/"
+                      href="https://demos.themeselection.com/Spark Lab Hub-bootstrap-html-admin-template/html/vertical-menu-template/"
                       target="_blank"
                       class="footer-text fw-bold"
-                      >Spark Lab</a
+                      >Spark Lab Hub</a
                     >
                     ©
                   </div>
