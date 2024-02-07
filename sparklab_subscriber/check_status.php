@@ -7,7 +7,7 @@ session_start();
 
 if (!isset($_SESSION['email'])) {
   // Redirect the user to the login page
-  header("Location: login.php");
+  header("Location: index.php");
   exit(); // Stop further execution
 }
 
@@ -350,7 +350,7 @@ if (isset($_SESSION['email'])) {
                             </div>
                             <span class="fw-medium d-block mb-1">Profit</span>
                             <h3 class="card-title mb-2">$12,628</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +72.80%</small>
+                            <small class="text-success fw-medium"><!-- <i class="bx bx-up-arrow-alt"></i> -->Registared</small>
                           </div>
                         </div>
                       </div>
@@ -382,7 +382,7 @@ if (isset($_SESSION['email'])) {
                             </div>
                             <span>Sales</span>
                             <h3 class="card-title text-nowrap mb-1">$4,679</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +28.42%</small>
+                            <small class="text-success fw-medium"><!-- <i class="bx bx-up-arrow-alt"></i> -->+28.42%</small>
                           </div>
                         </div>
                       </div>

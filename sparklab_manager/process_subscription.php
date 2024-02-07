@@ -2,33 +2,18 @@
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Retrieve form data
-    $fullName = $_POST['fullName'];
     $email = $_POST['email'];
-    $amount = $_POST['amount'];
+    $amountKobo = $_POST['amount'];
     $paymentReference = $_POST['paymentReference'];
 
-    // Calculate subscription duration and expiration date based on amount
-    if ($amount == 50000) {
-        $duration = 'daily';
-        $expirationDate = date('Y-m-d H:i:s', strtotime('+1 day'));
-    } elseif ($amount == 100000) {
-        $duration = 'weekly';
-        $expirationDate = date('Y-m-d H:i:s', strtotime('+1 week'));
-    } elseif ($amount == 200000) {
-        $duration = 'monthly';
-        $expirationDate = date('Y-m-d H:i:s', strtotime('+1 month'));
-    }
+    // Convert amount from kobo to Naira
+    $amountNaira = $amountKobo / 100;
 
-    // Prepare data for database insertion
-    $status = 'paid'; // Assuming the initial status is pending
-    $data = 'Paid'; // You can fill this with any additional data as needed
-
-    // Perform database operations (insert subscription details)
-    // Replace this with your actual database connection and query
+    // Perform database connection
     $servername = "localhost";
-    $username = "root";
-    $password = "";
-    $dbname = "sparklab";
+    $username = "sparklab_portal"; // Update with your database username
+    $password = "sparklab_portal"; // Update with your database password
+    $dbname = "sparklab_portal";   // Update with your database name
 
     // Create connection
     $conn = new mysqli($servername, $username, $password, $dbname);
@@ -38,18 +23,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die("Connection failed: " . $conn->connect_error);
     }
 
+    // Retrieve the subscriber ID based on the email
+    $subscriberQuery = "SELECT registration_id FROM subscribers WHERE email = '$email'";
+    $subscriberResult = $conn->query($subscriberQuery);
 
-    
-    // Insert subscription details into database
-    $sql = "INSERT INTO subscriptions (subscriber_id, email, amount, payment_reference, status, duration, expiration_date)
-            VALUES ('$fullName', '$email', $amount, '$paymentReference', '$status', '$duration', '$expirationDate')";
+    if ($subscriberResult) {
+        // Check if subscriber exists
+        if ($subscriberResult->num_rows > 0) {
+            $subscriberRow = $subscriberResult->fetch_assoc();
+            $subscriberId = $subscriberRow['registration_id'];
 
-    if ($conn->query($sql) === TRUE) {
-        echo "Subscription processed successfully!";
+            // Calculate subscription duration and expiration date based on amount
+            if ($amountNaira == 1500) { // Daily amount in Naira
+                $duration = 'daily';
+                $expirationDate = date('Y-m-d H:i:s', strtotime('+1 day'));
+            } elseif ($amountNaira == 6500) { // Weekly amount in Naira
+                $duration = 'weekly';
+                $expirationDate = date('Y-m-d H:i:s', strtotime('+1 week'));
+            } elseif ($amountNaira == 25000) { // Monthly amount in Naira
+                $duration = 'monthly';
+                $expirationDate = date('Y-m-d H:i:s', strtotime('+1 month'));
+            }
+
+            // Prepare data for database insertion
+            $status = 'paid'; // Assuming the initial status is pending
+            $data = ''; // You can fill this with any additional data as needed
+
+            // Insert subscription details into database
+            $sql = "INSERT INTO subscriptions (subscriber_id, email, amount, payment_reference, status, duration, expiration_date)
+                    VALUES ('$subscriberId', '$email', '$amountNaira', '$paymentReference', '$status', '$duration', '$expirationDate')";
+
+            if ($conn->query($sql) === TRUE) {
+                echo "Subscription processed successfully!";
+            } else {
+                echo "Error: " . $sql . "<br>" . $conn->error;
+            }
+        } else {
+            echo "Subscriber not found for email: $email";
+        }
     } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
+        echo "Error: " . $subscriberQuery . "<br>" . $conn->error;
     }
 
+    // Close database connection
     $conn->close();
 }
 ?>

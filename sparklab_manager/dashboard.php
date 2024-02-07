@@ -1,5 +1,5 @@
 <?php
-include '../config/config.php'; // Make sure to include your database connection here
+include '../config/config.php'; // Include your database connection here
 session_start();
 
 // Check if the user is logged in
@@ -11,10 +11,46 @@ if (isset($_SESSION['username'])) {
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
         $fullName = $row['name'];
-        // $profilePhoto = $row['profile_photo'];
 
-        // Close the database connection
-        // $conn->close();
+        // Retrieve the count of total users
+        $totalUsersSql = "SELECT COUNT(*) AS totalUsers FROM subscribers";
+        $totalUsersResult = $conn->query($totalUsersSql);
+
+        if ($totalUsersResult && $totalUsersResult->num_rows > 0) {
+            $totalUsersRow = $totalUsersResult->fetch_assoc();
+            $totalUsers = $totalUsersRow['totalUsers'];
+        }
+
+        // Retrieve the count of active users
+        $activeUsersSql = "SELECT COUNT(*) AS activeUsers FROM subscriptions WHERE expiration_date > NOW()";
+        $activeUsersResult = $conn->query($activeUsersSql);
+
+        if ($activeUsersResult && $activeUsersResult->num_rows > 0) {
+            $activeUsersRow = $activeUsersResult->fetch_assoc();
+            $activeUsers = $activeUsersRow['activeUsers'];
+        }
+
+        // Retrieve the count of check-ins
+        $checkInCountSql = "SELECT COUNT(*) AS totalCheckIns FROM check_in";
+        $checkInCountResult = $conn->query($checkInCountSql);
+
+        if ($checkInCountResult && $checkInCountResult->num_rows > 0) {
+            $checkInCountRow = $checkInCountResult->fetch_assoc();
+            $totalCheckIns = $checkInCountRow['totalCheckIns'];
+        }
+
+        // Retrieve the total amount from the subscriptions table
+        $totalAmountSql = "SELECT SUM(amount) AS totalAmount FROM subscriptions";
+        $totalAmountResult = $conn->query($totalAmountSql);
+
+        if ($totalAmountResult && $totalAmountResult->num_rows > 0) {
+            $totalAmountRow = $totalAmountResult->fetch_assoc();
+            $totalAmount = $totalAmountRow['totalAmount'];
+        }
+    } else {
+        // Redirect to the login page if the user is not found
+        header("Location: index.php"); // Adjust the path based on your file structure
+        exit();
     }
 } else {
     // Redirect to the login page if the user is not logged in
@@ -22,8 +58,10 @@ if (isset($_SESSION['username'])) {
     exit();
 }
 
-
+// Close the database connection
+$conn->close();
 ?>
+
 
 
 <!DOCTYPE html>
@@ -143,7 +181,7 @@ if (isset($_SESSION['username'])) {
               </li>
 
               <li class="menu-item ">
-                <a href="attendance.php" class="menu-link ">
+                <a href="active_user.php" class="menu-link ">
                   <i class="menu-icon  bx bx-user-check"></i>
                   <div data-i18n="Dashboards">Active Subscribers</div>
                   <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
@@ -232,8 +270,8 @@ if (isset($_SESSION['username'])) {
                               </div>
                             </div>
                             <div class="flex-grow-1">
-                              <span class="fw-medium d-block">John Doe</span>
-                              <small class="text-muted">Admin</small>
+                              <span class="fw-medium d-block"><?php echo $fullName; ?></span>
+                              <small class="text-muted">manager</small>
                             </div>
                           </div>
                         </a>
@@ -340,9 +378,9 @@ if (isset($_SESSION['username'])) {
                                 </div>
                               </div>
                             </div>
-                            <span class="fw-medium d-block mb-1">Profit</span>
-                            <h3 class="card-title mb-2">$12,628</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +72.80%</small>
+                            <span class="fw-medium d-block mb-1">Total User</span>
+                            <h3 class="card-title mb-2"><?php echo $totalUsers; ?></h3>
+                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i>5+ Every Day</small>
                           </div>
                         </div>
                       </div>
@@ -372,9 +410,9 @@ if (isset($_SESSION['username'])) {
                                 </div>
                               </div>
                             </div>
-                            <span>Sales</span>
-                            <h3 class="card-title text-nowrap mb-1">$4,679</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +28.42%</small>
+                            <span>Active Users</span>
+                            <h3 class="card-title text-nowrap mb-1"><?php echo $activeUsers; ?></h3>
+                            <small class="text-success fw-medium"><!-- <i class="bx bx-up-arrow-alt"></i> -->online</small>
                           </div>
                         </div>
                       </div>
@@ -402,15 +440,15 @@ if (isset($_SESSION['username'])) {
                                   2022
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="growthReportId">
-                                  <a class="dropdown-item" href="javascript:void(0);">2021</a>
-                                  <a class="dropdown-item" href="javascript:void(0);">2020</a>
-                                  <a class="dropdown-item" href="javascript:void(0);">2019</a>
+                                  <a class="dropdown-item" href="javascript:void(0);">2026</a>
+                                  <a class="dropdown-item" href="javascript:void(0);">2025</a>
+                                  <a class="dropdown-item" href="javascript:void(0);">2024</a>
                                 </div>
                               </div>
                             </div>
                           </div>
                           <div id="growthChart"></div>
-                          <div class="text-center fw-medium pt-3 mb-2">62% Company Growth</div>
+                          <div class="text-center fw-medium pt-3 mb-2">0% Company Growth</div>
   
                           <div class="d-flex px-xxl-4 px-lg-2 p-4 gap-xxl-3 gap-lg-1 gap-3 justify-content-between">
                             <div class="d-flex">
@@ -419,7 +457,7 @@ if (isset($_SESSION['username'])) {
                               </div>
                               <div class="d-flex flex-column">
                                 <small>2022</small>
-                                <h6 class="mb-0">$32.5k</h6>
+                                <h6 class="mb-0">₦0.00</h6>
                               </div>
                             </div>
                             <div class="d-flex">
@@ -428,7 +466,7 @@ if (isset($_SESSION['username'])) {
                               </div>
                               <div class="d-flex flex-column">
                                 <small>2021</small>
-                                <h6 class="mb-0">$41.2k</h6>
+                                <h6 class="mb-0">₦0.00</h6>
                               </div>
                             </div>
                           </div>
@@ -439,7 +477,7 @@ if (isset($_SESSION['username'])) {
                   <!--/ Total Revenue -->
                   <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
                     <div class="row">
-                      <div class="col-6 mb-4">
+                      <!-- <div class="col-6 mb-4">
                         <div class="card">
                           <div class="card-body">
                             <div class="card-title d-flex align-items-start justify-content-between">
@@ -467,7 +505,7 @@ if (isset($_SESSION['username'])) {
                             <small class="text-danger fw-medium"><i class="bx bx-down-arrow-alt"></i> -14.82%</small>
                           </div>
                         </div>
-                      </div>
+                      </div> -->
                       <div class="col-6 mb-4">
                         <div class="card">
                           <div class="card-body">
@@ -492,8 +530,8 @@ if (isset($_SESSION['username'])) {
                               </div>
                             </div>
                             <span class="fw-medium d-block mb-1">Transactions</span>
-                            <h3 class="card-title mb-2">$14,857</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +28.14%</small>
+                            <h3 class="card-title mb-2"><?php echo $totalAmount; ?></h3>
+                            <small class="text-success fw-medium"><!-- <i class="bx bx-up-arrow-alt"></i> -->+28.14%</small>
                           </div>
                         </div>
                       </div>
@@ -512,7 +550,7 @@ if (isset($_SESSION['username'])) {
                                   <small class="text-success text-nowrap fw-medium"
                                     ><i class="bx bx-chevron-up"></i> 68.2%</small
                                   >
-                                  <h3 class="mb-0">$84,686k</h3>
+                                  <h3 class="mb-0">₦0.0</h3>
                                 </div>
                               </div>
                               <div id="profileReportChart"></div>
@@ -749,7 +787,7 @@ if (isset($_SESSION['username'])) {
                               </div>
                               <div class="user-progress d-flex align-items-center gap-1">
                                 <h6 class="mb-0">+637.91</h6>
-                                <span class="text-muted">USD</span>
+                                <span class="text-muted">NGN</span>
                               </div>
                             </div>
                           </li>

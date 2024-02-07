@@ -200,7 +200,7 @@ $conn->close();
               </li>
 
               <li class="menu-item ">
-                <a href="attendance.php" class="menu-link ">
+                <a href="active_user.php" class="menu-link ">
                   <i class="menu-icon  bx bx-user-check"></i>
                   <div data-i18n="Dashboards">Active Subscribers</div>
                   <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
@@ -289,8 +289,8 @@ $conn->close();
                               </div>
                             </div>
                             <div class="flex-grow-1">
-                              <span class="fw-medium d-block">John Doe</span>
-                              <small class="text-muted">Admin</small>
+                              <span class="fw-medium d-block"><?php echo $fullName; ?></span>
+                              <small class="text-muted">Manager</small>
                             </div>
                           </div>
                         </a>
@@ -399,7 +399,7 @@ $conn->close();
                             </div>
                             <span class="fw-medium d-block mb-1">Profit</span>
                             <h3 class="card-title mb-2">$12,628</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +72.80%</small>
+                            <small class="text-success fw-medium"><!-- <i class="bx bx-up-arrow-alt"></i> -->Registared</small>
                           </div>
                         </div>
                       </div>
@@ -431,7 +431,7 @@ $conn->close();
                             </div>
                             <span>Sales</span>
                             <h3 class="card-title text-nowrap mb-1">$4,679</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +28.42%</small>
+                            <small class="text-success fw-medium"><!-- <i class="bx bx-up-arrow-alt"></i> -->+28.42%</small>
                           </div>
                         </div>
                       </div>
@@ -463,7 +463,7 @@ $conn->close();
                   <div class="row mb-3">
                       <label class="col-sm-2 col-form-label" for="basic-default-company">Area of Interest</label>
                       <div class="col-sm-10">
-                          <select class="form-select" id="exampleFormControlSelect1" name="area_of_interest" aria-label="Default select example" onchange="showTextArea()">
+                          <select class="form-select" id="exampleFormControlSelect1" name="area_of_interest" aria-label="Default select example" onchange="showTextArea()" required>
                               <option selected>-- Select an option --</option>
                               <option value="Creativity">Creativity</option>
                               <option value="Innovation">Innovation</option>

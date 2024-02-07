@@ -7,7 +7,7 @@ session_start();
 
 if (!isset($_SESSION['email'])) {
   // Redirect the user to the login page
-  header("Location: login.php");
+  header("Location: index.php");
   exit(); // Stop further execution
 }
 
@@ -21,6 +21,7 @@ if (isset($_SESSION['email'])) {
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
         $fullName = $row['full_name'];
+        $registrationId = $row['registration_id'];
         $profilePhoto = $row['profile_photo'];
 
         // Close the database connection
@@ -141,7 +142,7 @@ if (isset($_SESSION['email'])) {
               </li>
 
               <!-- <li class="menu-item ">
-                <a href="attendance.php" class="menu-link ">
+                <a href="active_user.php" class="menu-link ">
                   <i class="menu-icon  bx bx-user-check"></i>
                   <div data-i18n="Dashboards">Active Subscribers</div>
                 </a>
@@ -328,7 +329,7 @@ if (isset($_SESSION['email'])) {
                             </div>
                             <span class="fw-medium d-block mb-1">Profit</span>
                             <h3 class="card-title mb-2">$12,628</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +72.80%</small>
+                            <small class="text-success fw-medium"><!-- <i class="bx bx-up-arrow-alt"></i> -->Registared</small>
                           </div>
                         </div>
                       </div>
@@ -360,7 +361,7 @@ if (isset($_SESSION['email'])) {
                             </div>
                             <span>Sales</span>
                             <h3 class="card-title text-nowrap mb-1">$4,679</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +28.42%</small>
+                            <small class="text-success fw-medium"><!-- <i class="bx bx-up-arrow-alt"></i> -->+28.42%</small>
                           </div>
                         </div>
                       </div>
@@ -382,14 +383,14 @@ if (isset($_SESSION['email'])) {
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label" for="subscriberName">Registration ID</label>
                             <div class="col-sm-10">
-                                <input type="text" id="subscriberName" name="subscriberName" class="form-control" placeholder="John Doe" required>
+                                <input type="text" id="subscriberName" read-only name="subscriberName" value="<?php echo $registrationId; ?>" class="form-control" placeholder="John Doe" required readonly>
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label" for="basic-default-email">Email</label>
                             <div class="col-sm-10">
-                                <input type="email" id="basic-default-email" name="email"  value="<?php echo"$email";?>" class="form-control" placeholder="john.doe@example.com" required>
+                                <input type="email" id="basic-default-email" name="email"  value="<?php echo"$email";?>" class="form-control" placeholder="john.doe@example.com" required readonly>
                             </div>
                         </div>
 

@@ -16,44 +16,51 @@ if (!isset($_SESSION['email'])) {
 $email = $_SESSION['email'];
 
 // Retrieve subscriber ID using the email
-$subscriberIdQuery = "SELECT registration_id FROM subscribers WHERE email = ?";
-$stmt = $conn->prepare($subscriberIdQuery);
-$stmt->bind_param("s", $email);
-$stmt->execute();
-$result = $stmt->get_result();
+// Retrieve user data from the database
+$email = $_SESSION['email'];
+$sql = "SELECT * FROM subscribers WHERE email = '$email'";
+$result = $conn->query($sql);
 
-if ($result->num_rows > 0) {
+$subscriptions = []; // Initialize array to store subscriptions
+
+if ($result && $result->num_rows > 0) {
     $row = $result->fetch_assoc();
+    $fullName = $row['full_name'];
+    $profilePhoto = $row['profile_photo'];
+
+    // Fetch active subscription details for the dashboard
     $subscriberId = $row['registration_id'];
+    $subscriptionSql = "SELECT * FROM subscriptions WHERE subscriber_id = '$subscriberId' AND expiration_date > NOW() ORDER BY expiration_date ASC";
+    $subscriptionResult = $conn->query($subscriptionSql);
 
-    // Fetch transactions using subscriber ID
-    $transactionQuery = "SELECT id, amount, payment_reference, status FROM subscriptions WHERE subscriber_id = '$subscriberId'";
-    $stmt = $conn->prepare($transactionQuery);
-    $stmt->bind_param("i", $subscriberId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $transactions = $result->fetch_all(MYSQLI_ASSOC);
-
-    // Retrieve user data from the database
-    $userQuery = "SELECT * FROM subscribers WHERE email = ?";
-    $stmt = $conn->prepare($userQuery);
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $fullName = $row['full_name'];
-        $profilePhoto = $row['profile_photo'];
+    if ($subscriptionResult && $subscriptionResult->num_rows > 0) {
+        while ($subscriptionRow = $subscriptionResult->fetch_assoc()) {
+            // Fetch subscription details
+            $subscriptionid = $subscriptionRow['id'];
+            $subscriptionDuration = $subscriptionRow['duration'];
+            $paymentReference = $subscriptionRow['payment_reference'];
+            $paymentStatus = $subscriptionRow['status'];
+            $amount = $subscriptionRow['amount'];
+            $creatAt = $subscriptionRow['created_at'];
+            
+            // Add subscription details to the array
+            $subscriptions[] = [
+                'id' => $subscriptionid,
+                'duration' => $subscriptionDuration,
+                'payment_reference' => $paymentReference,
+                'status' => $paymentStatus,
+                'amount' => $amount,
+                'created_at' => $creatAt
+            ];
+        }
     }
-
-    // Close the database connection
-    $stmt->close();
 }
 
 // Close the database connection
 $conn->close();
 ?>
+
+
 <!DOCTYPE html>
 
 <html
@@ -197,7 +204,7 @@ $conn->close();
               </li>
 
               <!-- <li class="menu-item ">
-                <a href="attendance.php" class="menu-link ">
+                <a href="active_user.php" class="menu-link ">
                   <i class="menu-icon  bx bx-user-check"></i>
                   <div data-i18n="Dashboards">Active Subscribers</div>
                 </a>
@@ -394,7 +401,7 @@ $conn->close();
                             </div>
                             <span class="fw-medium d-block mb-1">Profit</span>
                             <h3 class="card-title mb-2">$12,628</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +72.80%</small>
+                            <small class="text-success fw-medium"><!-- <i class="bx bx-up-arrow-alt"></i> -->Registared</small>
                           </div>
                         </div>
                       </div>
@@ -426,7 +433,7 @@ $conn->close();
                             </div>
                             <span>Sales</span>
                             <h3 class="card-title text-nowrap mb-1">$4,679</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +28.42%</small>
+                            <small class="text-success fw-medium"><!-- <i class="bx bx-up-arrow-alt"></i> -->+28.42%</small>
                           </div>
                         </div>
                       </div>
@@ -442,25 +449,29 @@ $conn->close();
                 <div class="col-xxl">
                   <div class="card mb-4">
                     <div class="card-header align-items-center justify-content-between">
+                                <!-- Other list items -->
+
                   <table id="dataTable" class="datatables-basic">
                     <thead>
                         <tr>
                             <th>id</th>
                             <th>Amount</th>
                             <th>Reference</th>
-                            <th>Subscription Status</th>
-                            <th>Action</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Remark</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($transactions as $transaction) : ?>
+                    <?php foreach ($subscriptions as $subscription): ?>
                             <tr>
-                                <td><?php echo $transaction['id']; ?></td>
-                                <td><?php echo $transaction['amount']; ?></td>
-                                <td><?php echo $transaction['payment_reference']; ?></td>
-                                <td><?php echo $transaction['status']; ?></td>
+                                <td><?php echo $subscription['id']; ?></td>
+                                <td><?php echo $subscription['amount']; ?></td>
+                                <td><?php echo $subscription['payment_reference']; ?></td>
+                                <td><?php echo $subscription['status']; ?></td>
+                                <td><?php echo $subscription['created_at']; ?></td>
                                 <td>
-                                    <button class="btn btn-primary" onclick="viewTransaction(<?php echo $transaction['id']; ?>)">View</button>
+                                    <button class="btn btn-primary" onclick="viewTransaction(<?php echo $transaction['id']; ?>)">Approved</button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -470,11 +481,7 @@ $conn->close();
               </div>
             </div>
             </div>
-              
-
-
-
-              </div>
+           </div>
                 
                 
               <!-- / Content -->
@@ -566,7 +573,40 @@ $conn->close();
               alert('Delete clicked for: ' + data[0]);
           });
       });
+
+// Function to open the transaction modal and display details
+function viewTransaction(transactionId) {
+    // You can fetch additional details from the server using AJAX if needed
+    // For simplicity, let's assume the transaction details are already available in PHP
+    var transactionDetails = '<?php echo json_encode($subscriptions); ?>';
+    transactionDetails = JSON.parse(transactionDetails);
+    
+    // Find the transaction with the given ID
+    var transaction = transactionDetails.find(function(item) {
+        return item.id === transactionId;
+    });
+
+    // Display the transaction details in the modal
+    var modalContent = "<h2>Transaction Details</h2>";
+    modalContent += "<p><strong>ID:</strong> " + transaction.id + "</p>";
+    modalContent += "<p><strong>Amount:</strong> " + transaction.amount + "</p>";
+    modalContent += "<p><strong>Reference:</strong> " + transaction.payment_reference + "</p>";
+    modalContent += "<p><strong>Status:</strong> " + transaction.status + "</p>";
+    modalContent += "<p><strong>Date:</strong> " + transaction.created_at + "</p>";
+
+    document.getElementById("transactionDetails").innerHTML = modalContent;
+
+    // Show the modal
+    document.getElementById("transactionModal").style.display = "block";
+}
+
+// Function to close the modal
+function closeModal() {
+    document.getElementById("transactionModal").style.display = "none";
+}
+
   </script>
+
 
   </body>
 </html>

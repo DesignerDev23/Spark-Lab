@@ -8,6 +8,42 @@ if (isset($_SESSION['username'])) {
     $sql = "SELECT * FROM manager WHERE username = '$username'";
     $result = $conn->query($sql);
 
+
+    $totalUsersSql = "SELECT COUNT(*) AS totalUsers FROM subscribers";
+        $totalUsersResult = $conn->query($totalUsersSql);
+
+        if ($totalUsersResult && $totalUsersResult->num_rows > 0) {
+            $totalUsersRow = $totalUsersResult->fetch_assoc();
+            $totalUsers = $totalUsersRow['totalUsers'];
+        }
+
+        // Retrieve the count of active users
+        $activeUsersSql = "SELECT COUNT(*) AS activeUsers FROM subscriptions WHERE expiration_date > NOW()";
+        $activeUsersResult = $conn->query($activeUsersSql);
+
+        if ($activeUsersResult && $activeUsersResult->num_rows > 0) {
+            $activeUsersRow = $activeUsersResult->fetch_assoc();
+            $activeUsers = $activeUsersRow['activeUsers'];
+        }
+
+        // Retrieve the count of check-ins
+        $checkInCountSql = "SELECT COUNT(*) AS totalCheckIns FROM check_in";
+        $checkInCountResult = $conn->query($checkInCountSql);
+
+        if ($checkInCountResult && $checkInCountResult->num_rows > 0) {
+            $checkInCountRow = $checkInCountResult->fetch_assoc();
+            $totalCheckIns = $checkInCountRow['totalCheckIns'];
+        }
+
+        // Retrieve the total amount from the subscriptions table
+        $totalAmountSql = "SELECT SUM(amount) AS totalAmount FROM subscriptions";
+        $totalAmountResult = $conn->query($totalAmountSql);
+
+        if ($totalAmountResult && $totalAmountResult->num_rows > 0) {
+            $totalAmountRow = $totalAmountResult->fetch_assoc();
+            $totalAmount = $totalAmountRow['totalAmount'];
+        }
+
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
         $fullName = $row['name'];
@@ -142,7 +178,7 @@ if (isset($_SESSION['username'])) {
               </li>
 
               <li class="menu-item ">
-                <a href="attendance.php" class="menu-link ">
+                <a href="active_user.php" class="menu-link ">
                   <i class="menu-icon  bx bx-user-check"></i>
                   <div data-i18n="Dashboards">Active Subscribers</div>
                   <!-- <div class="badge bg-danger rounded-pill ms-auto">5</div> -->
@@ -231,8 +267,8 @@ if (isset($_SESSION['username'])) {
                               </div>
                             </div>
                             <div class="flex-grow-1">
-                              <span class="fw-medium d-block">John Doe</span>
-                              <small class="text-muted">Admin</small>
+                              <span class="fw-medium d-block"><?php echo $fullName; ?></span>
+                              <small class="text-muted">Manager</small>
                             </div>
                           </div>
                         </a>
@@ -339,9 +375,9 @@ if (isset($_SESSION['username'])) {
                                 </div>
                               </div>
                             </div>
-                            <span class="fw-medium d-block mb-1">Profit</span>
-                            <h3 class="card-title mb-2">$12,628</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +72.80%</small>
+                            <span class="fw-medium d-block mb-1">Total User</span>
+                            <h3 class="card-title mb-2"><?php echo"$totalUsers"?></h3>
+                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i>Registered</small>
                           </div>
                         </div>
                       </div>
@@ -371,9 +407,9 @@ if (isset($_SESSION['username'])) {
                                 </div>
                               </div>
                             </div>
-                            <span>Sales</span>
-                            <h3 class="card-title text-nowrap mb-1">$4,679</h3>
-                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i> +28.42%</small>
+                            <span>Active Users</span>
+                            <h3 class="card-title text-nowrap mb-1"><?php echo"$activeUsers"?></h3>
+                            <small class="text-success fw-medium"><i class="bx bx-up-arrow-alt"></i>online</small>
                           </div>
                         </div>
                       </div>
